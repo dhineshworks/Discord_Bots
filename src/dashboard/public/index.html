@@ -11,9 +11,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
+    <!-- MOBILE TOP BAR -->
+    <header class="mobile-top-header">
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="mobile-brand">
+            <div class="brand-logo-small">
+                <i class="fa-solid fa-bolt-lightning"></i>
+            </div>
+            <span class="mobile-brand-title">CodeX Bot</span>
+        </div>
+        <div class="mobile-status-indicator">
+            <span class="pulse-dot"></span>
+            <span id="mobile-live-tag">Online</span>
+        </div>
+    </header>
+
+    <!-- MOBILE SIDEBAR BACKDROP -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
     <div class="dashboard-container">
         <!-- LEFT SIDEBAR -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="dashboard-sidebar">
             <div class="brand">
                 <div class="brand-logo">
                     <i class="fa-solid fa-bolt-lightning"></i>
@@ -22,6 +42,9 @@
                     <h2>CodeX Bot</h2>
                     <span>Discord Bot Dashboard</span>
                 </div>
+                <button class="mobile-close-sidebar-btn" id="mobile-close-sidebar-btn" aria-label="Close menu">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
             <nav class="nav-menu">
@@ -179,11 +202,14 @@
                                     </div>
 
                                     <div class="voice-actions-box">
+                                        <button type="button" class="btn-action" id="btn-toggle-playback-mode" onclick="togglePlaybackModeUI()" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; font-weight: 600;" title="Toggle between One-by-One (turn-based) and Simultaneous playback">
+                                            <i class="fa-solid fa-list-ol"></i> Mode: One by One 🔁
+                                        </button>
                                         <button type="button" class="btn-action" style="background: linear-gradient(135deg, #7c3aed, #db2777); color: #fff; font-weight: 600;" onclick="randomizeAllBotSoundsUI()">
-                                            <i class="fa-solid fa-shuffle"></i> 🎲 Shuffle All (Unique Sounds)
+                                            <i class="fa-solid fa-shuffle"></i> 🎲 Shuffle Sounds
                                         </button>
                                         <button type="button" class="btn-action btn-secondary" id="btn-toggle-rotation" onclick="toggleAutoRotationUI()" title="When a track ends, bot picks another unique sound">
-                                            <i class="fa-solid fa-shuffle"></i> Auto-Shuffle: ON
+                                            <i class="fa-solid fa-repeat"></i> Auto-Shuffle: ON
                                         </button>
                                         <button type="button" class="btn-action btn-join-all" onclick="voiceAction('join-all')">
                                             <i class="fa-solid fa-headset"></i> Connect All
@@ -1037,6 +1063,30 @@
 
     <!-- NOTIFICATION TOAST -->
     <div id="toast" class="toast"></div>
+
+    <!-- MOBILE BOTTOM NAVIGATION DOCK -->
+    <nav class="mobile-bottom-nav">
+        <button class="mobile-nav-btn active" data-tab="dashboard">
+            <i class="fa-solid fa-house"></i>
+            <span>Overview</span>
+        </button>
+        <button class="mobile-nav-btn" data-tab="voice-control">
+            <i class="fa-solid fa-volume-high"></i>
+            <span>Bots & Voice</span>
+        </button>
+        <button class="mobile-nav-btn" data-tab="direct-message">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>DMs</span>
+        </button>
+        <button class="mobile-nav-btn" data-tab="settings">
+            <i class="fa-solid fa-gear"></i>
+            <span>Settings</span>
+        </button>
+        <button class="mobile-nav-btn" id="mobile-more-btn">
+            <i class="fa-solid fa-bars-staggered"></i>
+            <span>Menu</span>
+        </button>
+    </nav>
 
     <script src="app.js"></script>
 </body>

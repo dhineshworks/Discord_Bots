@@ -115,14 +115,17 @@ if (!token || token === 'YOUR_BOT_TOKEN_HERE') {
     client.login(token).then(() => {
         // Support connecting additional bots to the voice channel if tokens provided
         const extraTokens = (process.env.EXTRA_BOT_TOKENS || '').split(',').map(t => t.trim()).filter(Boolean);
+        let delay = 1000;
         for (const extToken of extraTokens) {
             const extraClient = new Client({
                 intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
             });
             extraClients.push(extraClient);
+            const currentDelay = delay;
+            delay += 1000;
             extraClient.once('ready', () => {
                 console.log(`🤖 Extra Bot Connected: ${extraClient.user.tag}`);
-                setTimeout(() => joinTargetVoice(extraClient, 'General Lounge'), 1500);
+                setTimeout(() => joinTargetVoice(extraClient, 'General Lounge'), currentDelay);
             });
             extraClient.on('guildCreate', (guild) => {
                 console.log(`🎉 Extra Bot ${extraClient.user.tag} added to server: ${guild.name}`);

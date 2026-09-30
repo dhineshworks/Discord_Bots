@@ -93,23 +93,33 @@ function resolveAudioFile(soundType) {
 }
 
 /**
- * Spawns an FFmpeg process that outputs pure OggOpus packets directly.
- * Plays through naturally so player emits Idle when complete to allow unique sound rotation.
+ * Spawns an optimized FFmpeg process delivering pristine 20ms Opus frames into an Ogg stream.
+ * - NO '-re': prevents artificial stream starvation and buffer underruns in Discord.js audio player
+ * - '-page_duration 20000': emits 20ms pages matching Discord's packet clock perfectly
+ * - '-application audio -frame_duration 20': ensures clean Opus packets without jitter
  */
-function spawnOggOpusStream(soundType, loop = false) {
+function spawnOggOpusStream(soundType, loop = false, volume = 1.0) {
     const mp3File = resolveAudioFile(soundType);
     const isMp3 = Boolean(mp3File);
     let ffmpegArgs = [];
+    const vol = Math.max(0, Math.min(2.0, typeof volume === 'number' ? volume : 1.0));
+    const volumeArgs = (vol !== 1.0) ? ['-af', `volume=${vol}`] : [];
 
     if (isMp3) {
         ffmpegArgs = [
             ...(loop ? ['-stream_loop', '-1'] : []),
-            '-re',
             '-i', mp3File,
+            '-vn',
+            '-sn',
+            '-dn',
+            ...volumeArgs,
             '-c:a', 'libopus',
             '-b:a', '128k',
             '-ar', '48000',
             '-ac', '2',
+            '-application', 'audio',
+            '-frame_duration', '20',
+            '-page_duration', '20000',
             '-f', 'ogg',
             'pipe:1'
         ];
@@ -118,10 +128,16 @@ function spawnOggOpusStream(soundType, loop = false) {
         ffmpegArgs = [
             '-f', 'lavfi',
             '-i', lavfiFilter,
+            '-vn',
+            '-sn',
+            ...volumeArgs,
             '-c:a', 'libopus',
             '-b:a', '96k',
             '-ar', '48000',
             '-ac', '2',
+            '-application', 'audio',
+            '-frame_duration', '20',
+            '-page_duration', '20000',
             '-f', 'ogg',
             'pipe:1'
         ];
@@ -131,9 +147,24 @@ function spawnOggOpusStream(soundType, loop = false) {
         stdio: ['ignore', 'pipe', 'ignore'] 
     });
 
-    const resource = createAudioResource(p.stdout, {
-        inputType: StreamType.OggOpus
+    p.on('error', (err) => {
+        // Prevent unhandled error events if process terminates early
     });
+
+    if (p.stdout) {
+        p.stdout.on('error', () => {});
+    }
+
+    const resource = createAudioResource(p.stdout, {
+        inputType: StreamType.OggOpus,
+        silencePaddingFrames: 5
+    });
+
+    if (resource.playStream) {
+        resource.playStream.on('error', (err) => {
+            // Prevent unhandled stream error
+        });
+    }
 
     return { resource, process: p, isMp3, resolvedPath: mp3File };
 }
@@ -166,6 +197,7 @@ function playSoundOnConnection(connection, soundType = 'comedy-punda-kaatriya', 
 
     const key = connection.joinConfig?.group || connection.joinConfig?.channelId || 'default';
     const botId = options.botId || key;
+    const onEndCallback = typeof options.onEnd === 'function' ? options.onEnd : null;
 
     // Stop existing stream for this connection if any
     stopSound(key);
@@ -173,31 +205,50 @@ function playSoundOnConnection(connection, soundType = 'comedy-punda-kaatriya', 
     const player = createAudioPlayer({
         behaviors: {
             noSubscriber: NoSubscriberBehavior.Play,
-            maxMissedFrames: 250
+            maxMissedFrames: 500
         }
     });
 
     const settings = readSettings();
     const isAutoRotate = settings.randomRotation !== false;
 
-    // Play without infinite loop so Idle is fired when track ends
-    const { resource, process: p, isMp3 } = spawnOggOpusStream(soundType, !isAutoRotate && !isMp3);
+    // Check individual bot volume & mute status
+    const botMuted = settings.botMuted?.[botId] === true;
+    let botVolume = 1.0;
+    if (botMuted) {
+        botVolume = 0.0;
+    } else if (typeof settings.botVolumes?.[botId] === 'number') {
+        botVolume = settings.botVolumes[botId] / 100;
+    } else if (typeof options.volume === 'number') {
+        botVolume = options.volume;
+    }
+
+    // If auto-rotate is on: play once so Idle naturally triggers next unique sound
+    // If auto-rotate is off: loop the chosen sound continuously
+    const { resource, process: p, isMp3 } = spawnOggOpusStream(soundType, !isAutoRotate && !onEndCallback, botVolume);
 
     player.play(resource);
     connection.subscribe(player);
 
-    activeStreams.set(key, { 
+    const record = { 
         process: p, 
         player, 
         soundType, 
         connection,
         isMp3,
         botId,
-        startedAt: Date.now()
-    });
+        volume: botVolume,
+        startedAt: Date.now(),
+        isTransitioning: false,
+        timeout: null,
+        stopped: false,
+        onEnd: onEndCallback
+    };
+
+    activeStreams.set(key, record);
 
     player.on(AudioPlayerStatus.Playing, () => {
-        console.log(`[Audio 24/7] 🔊 [${key}] Native Opus Playing: [${soundType}]`);
+        console.log(`[Audio 24/7] 🔊 [${key}] Native Opus Playing: [${record.soundType}]`);
     });
 
     player.on(AudioPlayerStatus.AutoPaused, () => {
@@ -205,91 +256,112 @@ function playSoundOnConnection(connection, soundType = 'comedy-punda-kaatriya', 
         try { player.unpause(); } catch (_) {}
     });
 
-    // When audio ends: select NEXT UNIQUE RANDOM SOUND that no other bot is playing!
+    // When audio track ends:
     player.on(AudioPlayerStatus.Idle, () => {
-        if (!activeStreams.has(key)) return;
-        const currentRecord = activeStreams.get(key);
-        if (!currentRecord) return;
+        if (record.stopped || !activeStreams.has(key)) return;
+        if (record.isTransitioning) return;
+        record.isTransitioning = true;
+
+        if (onEndCallback) {
+            stopSound(key);
+            try { onEndCallback(key, record.soundType); } catch (e) { console.error('[Audio onEnd error]:', e); }
+            return;
+        }
 
         const currentSettings = readSettings();
         const shouldRotate = currentSettings.randomRotation !== false;
 
-        let nextSound = currentRecord.soundType;
+        let nextSound = record.soundType;
 
         if (shouldRotate) {
             // Find all sounds currently playing by all other bots
             const otherPlaying = getActivePlayingSounds(key);
             // Select next unique random uploaded sound
-            nextSound = getNextRandomSoundForBot(key, currentRecord.soundType, otherPlaying);
+            nextSound = getNextRandomSoundForBot(key, record.soundType, otherPlaying);
             console.log(`[Audio Randomizer] 🎲 Bot [${key}] finished track. Next unique sound: [${nextSound}] (Others playing: ${otherPlaying.join(', ') || 'none'})`);
         }
 
-        // Brief 400ms pause for seamless non-overlapping audio transition
-        setTimeout(() => {
-            if (!activeStreams.has(key)) return;
+        // Clean, quick 200ms transition between sounds
+        if (record.timeout) clearTimeout(record.timeout);
+        record.timeout = setTimeout(() => {
+            record.timeout = null;
+            if (record.stopped || !activeStreams.has(key)) return;
+
             try {
-                if (currentRecord.process) {
-                    try { currentRecord.process.kill(); } catch (_) {}
+                if (record.process) {
+                    try { record.process.kill(); } catch (_) {}
                 }
-                const next = spawnOggOpusStream(nextSound, !shouldRotate && !currentRecord.isMp3);
-                currentRecord.process = next.process;
-                currentRecord.soundType = nextSound;
-                currentRecord.startedAt = Date.now();
+                const next = spawnOggOpusStream(nextSound, !shouldRotate, record.volume);
+                record.process = next.process;
+                record.soundType = nextSound;
+                record.startedAt = Date.now();
+                record.isTransitioning = false;
                 player.play(next.resource);
             } catch (err) {
                 console.warn(`[Audio Loop Error (${key})]:`, err.message);
-                setTimeout(() => {
-                    if (activeStreams.has(key)) {
-                        playSoundOnConnection(connection, nextSound, options);
-                    }
-                }, 1000);
+                record.isTransitioning = false;
+                if (!record.stopped && activeStreams.has(key)) {
+                    record.timeout = setTimeout(() => {
+                        record.timeout = null;
+                        if (!record.stopped && activeStreams.has(key)) {
+                            playSoundOnConnection(connection, nextSound, options);
+                        }
+                    }, 1000);
+                }
             }
-        }, 400);
+        }, 200);
     });
 
     player.on('error', (err) => {
         console.warn(`[Audio Player Error (${key})]:`, err.message);
-        setTimeout(() => {
-            if (activeStreams.has(key)) {
+        if (record.stopped) return;
+        if (record.timeout) clearTimeout(record.timeout);
+        record.timeout = setTimeout(() => {
+            record.timeout = null;
+            if (!record.stopped && activeStreams.has(key)) {
                 const otherPlaying = getActivePlayingSounds(key);
-                const next = getNextRandomSoundForBot(key, soundType, otherPlaying);
+                const next = getNextRandomSoundForBot(key, record.soundType, otherPlaying);
                 playSoundOnConnection(connection, next, options);
             }
-        }, 1500);
+        }, 1200);
     });
-
-    if (p) {
-        p.on('error', (err) => {
-            console.warn(`[FFmpeg Process Error (${key})]:`, err.message);
-        });
-    }
 
     return player;
 }
 
 /**
- * Stop audio on a specific connection or all connections
+ * Stop audio on a specific connection or all connections cleanly
  * @param {string|null} key
  */
 function stopSound(key = null) {
     if (key) {
         const stream = activeStreams.get(key);
         if (stream) {
+            stream.stopped = true;
+            if (stream.timeout) {
+                clearTimeout(stream.timeout);
+                stream.timeout = null;
+            }
             if (stream.process) {
                 try { stream.process.kill(); } catch (_) {}
             }
             if (stream.player) {
-                try { stream.player.stop(); } catch (_) {}
+                try { stream.player.stop(true); } catch (_) {}
             }
             activeStreams.delete(key);
         }
     } else {
         for (const [k, stream] of activeStreams.entries()) {
+            stream.stopped = true;
+            if (stream.timeout) {
+                clearTimeout(stream.timeout);
+                stream.timeout = null;
+            }
             if (stream.process) {
                 try { stream.process.kill(); } catch (_) {}
             }
             if (stream.player) {
-                try { stream.player.stop(); } catch (_) {}
+                try { stream.player.stop(true); } catch (_) {}
             }
         }
         activeStreams.clear();

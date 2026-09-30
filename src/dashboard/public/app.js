@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchVoiceStatus, 2500); // Live poll voice every 2.5 seconds
 });
 
-// Tab Navigation
+// Tab Navigation & Mobile Drawer
 function initNavigation() {
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => {
@@ -18,8 +18,31 @@ function initNavigation() {
             e.preventDefault();
             const tabId = item.getAttribute('data-tab');
             switchTab(tabId);
+            closeMobileSidebar();
         });
     });
+
+    // Mobile Bottom Nav Buttons
+    const mobileBottomBtns = document.querySelectorAll('.mobile-bottom-nav .mobile-nav-btn[data-tab]');
+    mobileBottomBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tabId = btn.getAttribute('data-tab');
+            switchTab(tabId);
+            closeMobileSidebar();
+        });
+    });
+
+    // Mobile Hamburger & Backdrop Handlers
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const closeBtn = document.getElementById('mobile-close-sidebar-btn');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const moreBtn = document.getElementById('mobile-more-btn');
+
+    if (menuBtn) menuBtn.addEventListener('click', toggleMobileSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeMobileSidebar);
+    if (backdrop) backdrop.addEventListener('click', closeMobileSidebar);
+    if (moreBtn) moreBtn.addEventListener('click', toggleMobileSidebar);
 
     // Handle initial hash in URL
     const hash = window.location.hash.replace('#', '');
@@ -28,13 +51,36 @@ function initNavigation() {
     }
 }
 
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('dashboard-sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (sidebar) sidebar.classList.toggle('mobile-open');
+    if (backdrop) backdrop.classList.toggle('active');
+}
+
+function closeMobileSidebar() {
+    const sidebar = document.getElementById('dashboard-sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    if (backdrop) backdrop.classList.remove('active');
+}
+
 function switchTab(tabId) {
-    // Update active nav item
+    // Update active sidebar nav item
     document.querySelectorAll('.nav-item').forEach(item => {
         if (item.getAttribute('data-tab') === tabId) {
             item.classList.add('active');
         } else {
             item.classList.remove('active');
+        }
+    });
+
+    // Update active mobile bottom nav button
+    document.querySelectorAll('.mobile-bottom-nav .mobile-nav-btn').forEach(btn => {
+        if (btn.getAttribute('data-tab') === tabId) {
+            btn.classList.add('active');
+        } else if (btn.getAttribute('data-tab')) {
+            btn.classList.remove('active');
         }
     });
 
@@ -275,6 +321,18 @@ async function fetchVoiceStatus(isManualRescan = false) {
             networkBadge.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> ${botsInVoice} / ${data.bots.length} in Voice`;
         }
 
+        // Update Playback Mode Button
+        const modeBtn = document.getElementById('btn-toggle-playback-mode');
+        if (modeBtn) {
+            if (data.playbackMode === 'one-by-one') {
+                modeBtn.innerHTML = '<i class="fa-solid fa-list-ol"></i> Mode: One by One 🔁';
+                modeBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            } else {
+                modeBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Mode: All at Once ⚡';
+                modeBtn.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+            }
+        }
+
         // Update Auto-Shuffle Button
         const rotBtn = document.getElementById('btn-toggle-rotation');
         if (rotBtn) {
@@ -312,14 +370,22 @@ function renderBotsGrid(bots) {
     }
 
     container.innerHTML = bots.map(bot => {
-        const inVoice = bot.inVoice;
-        const channelText = inVoice ? `In Voice: ${escapeHtml(bot.voiceChannel)}` : 'Not in voice channel';
-        const channelClass = inVoice ? 'bot-card-channel in-voice' : 'bot-card-channel';
+        const inVoice = Boolean(bot.inVoice);
+        const channelText = inVoice ? `In Voice: ${escapeHtml(bot.voiceChannel)}` : 'Disconnected from VC';
+        const channelClass = inVoice ? 'bot-card-channel in-voice' : 'bot-card-channel disconnected';
         const channelIcon = inVoice ? 'fa-solid fa-volume-high' : 'fa-solid fa-microphone-slash';
         const activeSound = bot.activeSound || bot.assignedSound || 'hmmmhmmm';
-        const transmittingTag = inVoice && isSoundActive 
-            ? `<span class="bot-badge-tag transmitting"><i class="fa-solid fa-wave-square"></i> ${escapeHtml(activeSound)}</span>` 
-            : '<span class="bot-badge-tag idle">Idle</span>';
+        const isMuted = Boolean(bot.muted);
+        const volumeVal = bot.volume !== undefined ? bot.volume : 80;
+
+        let transmittingTag = '<span class="bot-badge-tag idle">Idle</span>';
+        if (inVoice) {
+            if (bot.isPlaying) {
+                transmittingTag = `<span class="bot-badge-tag transmitting"><i class="fa-solid fa-wave-square fa-fade"></i> SPEAKING: ${escapeHtml(activeSound)}</span>`;
+            } else if (isSoundActive) {
+                transmittingTag = `<span class="bot-badge-tag in-queue"><i class="fa-solid fa-hourglass-half"></i> In Queue: ${escapeHtml(activeSound)}</span>`;
+            }
+        }
 
         const defaultAvatar = `https://cdn.discordapp.com/embed/avatars/${parseInt(bot.id.slice(-2)) % 5}.png`;
         const avatarUrl = bot.avatar || defaultAvatar;
@@ -337,50 +403,78 @@ function renderBotsGrid(bots) {
         `).join('');
 
         return `
-            <div class="bot-voice-card">
+            <div class="bot-voice-card ${bot.isPlaying ? 'speaking-active' : ''} ${isMuted ? 'muted-bot' : ''}">
                 <div class="bot-card-top">
                     <div class="bot-avatar-wrap">
                         <img src="${avatarUrl}" alt="${escapeHtml(bot.tag)}" class="bot-avatar-img">
-                        <span class="bot-online-indicator"></span>
+                        <span class="bot-online-indicator ${inVoice ? 'voice-online' : 'voice-offline'}"></span>
                     </div>
                     <div class="bot-details">
-                        <div class="bot-card-name">${escapeHtml(bot.tag)}</div>
+                        <div class="bot-name-row">
+                            <span class="bot-card-name">${escapeHtml(bot.tag)}</span>
+                            <span class="bot-mini-id">#${bot.id.slice(-4)}</span>
+                        </div>
                         <div class="${channelClass}">
                             <i class="${channelIcon}"></i>
                             <span>${channelText}</span>
                         </div>
                     </div>
+                    <div class="bot-quick-toggle">
+                        ${inVoice ? `
+                            <button class="btn-vc-chip leave" onclick="botToggleVC('${bot.id}', true)" title="Disconnect this bot">
+                                <i class="fa-solid fa-phone-slash"></i> <span>Leave</span>
+                            </button>
+                        ` : `
+                            <button class="btn-vc-chip join" onclick="botToggleVC('${bot.id}', false)" title="Connect this bot to VC">
+                                <i class="fa-solid fa-phone-volume"></i> <span>Join</span>
+                            </button>
+                        `}
+                    </div>
                 </div>
 
                 <div class="bot-card-badges">
                     ${transmittingTag}
-                    <span class="bot-badge-tag" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;">ID: ${bot.id.slice(-4)}</span>
+                    ${isMuted ? '<span class="bot-badge-tag muted-tag"><i class="fa-solid fa-volume-xmark"></i> Muted</span>' : ''}
                 </div>
 
                 <!-- INDIVIDUAL BOT SOUND SELECTOR -->
                 <div class="bot-sound-assign-row">
-                    <label class="bot-sound-label"><i class="fa-solid fa-folder-open"></i> Sound from /sounds folder:</label>
+                    <label class="bot-sound-label"><i class="fa-solid fa-music"></i> Audio Track:</label>
                     <select class="bot-sound-dropdown" onchange="assignBotIndividualSound('${bot.id}', this.value)">
-                        <option value="random">🎲 Random Unique Sound (No duplicate)</option>
+                        <option value="random">🎲 Random Unique Sound</option>
                         <optgroup label="📁 /sounds Folder (${folderSounds.length} sounds)">
                             ${folderOptionsHtml}
                         </optgroup>
-                        <optgroup label="🤖 Synthesized Presets">
+                        <optgroup label="🤖 Synthesized Sounds">
                             ${synthOptionsHtml}
                         </optgroup>
                     </select>
                 </div>
 
+                <!-- INDIVIDUAL BOT VOLUME & MUTE -->
+                <div class="bot-volume-row">
+                    <button class="btn-bot-mute ${isMuted ? 'active-mute' : ''}" onclick="botToggleMute('${bot.id}', ${isMuted})" title="${isMuted ? 'Unmute Bot' : 'Mute Bot'}">
+                        <i class="fa-solid ${isMuted ? 'fa-volume-xmark' : (volumeVal === 0 ? 'fa-volume-off' : (volumeVal < 50 ? 'fa-volume-low' : 'fa-volume-high'))}"></i>
+                    </button>
+                    <div class="bot-volume-slider-wrap">
+                        <div class="slider-meta">
+                            <span>Vol</span>
+                            <span id="vol-display-${bot.id}">${volumeVal}%</span>
+                        </div>
+                        <input type="range" class="bot-volume-slider" min="0" max="100" value="${volumeVal}"
+                            oninput="document.getElementById('vol-display-${bot.id}').innerText = this.value + '%'"
+                            onchange="botSetVolume('${bot.id}', this.value)">
+                    </div>
+                </div>
+
+                <!-- PLAY NOW / STOP DIRECT CONTROLS -->
                 <div class="bot-card-actions">
-                    ${inVoice ? `
-                        <button class="btn-bot-sub leave-btn" onclick="voiceAction('leave-bot', '${bot.id}')">
-                            <i class="fa-solid fa-phone-slash"></i> Disconnect
-                        </button>
-                    ` : `
-                        <button class="btn-bot-sub" onclick="voiceAction('join-bot', '${bot.id}')">
-                            <i class="fa-solid fa-phone-volume"></i> Connect VC
-                        </button>
-                    `}
+                    <button class="btn-bot-sub play-btn" onclick="botPlayNow('${bot.id}')" ${!inVoice ? 'disabled title="Connect bot to voice first"' : ''}>
+                        <i class="fa-solid fa-play"></i> <span>Play Now</span>
+                    </button>
+                    <button class="btn-bot-sub stop-btn" onclick="botStopSound('${bot.id}')" ${!inVoice ? 'disabled' : ''}>
+                        <i class="fa-solid fa-stop"></i> <span>Stop</span>
+                    </button>
                 </div>
             </div>
         `;
@@ -391,6 +485,93 @@ function renderBotsGrid(bots) {
     const mainVoiceCard = document.querySelector('.voice-studio-card');
     if (dedicatedClone && mainVoiceCard) {
         dedicatedClone.innerHTML = mainVoiceCard.outerHTML;
+    }
+}
+
+// Individual Bot Handlers
+async function botToggleVC(botId, inVoice) {
+    try {
+        const action = inVoice ? 'leave-bot' : 'join-bot';
+        const res = await fetch('/api/voice/action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, botId, channelName: 'General Lounge' })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(inVoice ? `🛑 Bot #${botId.slice(-4)} disconnected` : `🔌 Bot #${botId.slice(-4)} connecting to voice...`);
+            setTimeout(fetchVoiceStatus, 600);
+        }
+    } catch (e) {
+        showToast('❌ Voice toggle error');
+    }
+}
+
+async function botPlayNow(botId) {
+    try {
+        showToast(`▶ Bot #${botId.slice(-4)} speaking audio track now...`);
+        const res = await fetch('/api/voice/bot/play', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ botId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            setTimeout(fetchVoiceStatus, 300);
+        }
+    } catch (e) {
+        showToast('❌ Error playing sound on bot');
+    }
+}
+
+async function botStopSound(botId) {
+    try {
+        const res = await fetch('/api/voice/bot/stop', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ botId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`⏹ Bot #${botId.slice(-4)} audio stopped`);
+            setTimeout(fetchVoiceStatus, 300);
+        }
+    } catch (e) {
+        showToast('❌ Error stopping bot audio');
+    }
+}
+
+async function botSetVolume(botId, volume) {
+    try {
+        const res = await fetch('/api/voice/bot/volume', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ botId, volume: parseInt(volume) })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`🔊 Volume set to ${data.volume}% for #${botId.slice(-4)}`);
+        }
+    } catch (e) {
+        showToast('❌ Error adjusting bot volume');
+    }
+}
+
+async function botToggleMute(botId, isMuted) {
+    try {
+        const nextState = !isMuted;
+        const res = await fetch('/api/voice/bot/mute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ botId, muted: nextState })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(nextState ? `🔇 Bot #${botId.slice(-4)} muted` : `🔊 Bot #${botId.slice(-4)} unmuted`);
+            fetchVoiceStatus();
+        }
+    } catch (e) {
+        showToast('❌ Error toggling bot mute');
     }
 }
 
@@ -489,6 +670,25 @@ async function toggleAutoRotationUI() {
         }
     } catch (e) {
         showToast('❌ Error toggling auto-shuffle');
+    }
+}
+
+// Toggle Playback Mode: One-by-One (Turn-based) vs All-at-Once (Simultaneous)
+async function togglePlaybackModeUI() {
+    try {
+        const res = await fetch('/api/voice/toggle-playback-mode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (data.success) {
+            const label = data.playbackMode === 'one-by-one' ? 'One by One (Turn-Based)' : 'Simultaneous (All at once)';
+            showToast(`🔀 Playback Mode: ${label}`);
+            fetchVoiceStatus();
+        }
+    } catch (e) {
+        showToast('❌ Error switching playback mode');
     }
 }
 

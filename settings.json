@@ -149,11 +149,13 @@
   ],
   "botAudioAssignments": {
     "1460709989604655134": "siragadippom-naango",
-    "1554049771092836442": "athu-avalotha",
-    "1554049009319018526": "dei-engada-irukinga-tamil",
+    "1554049771092836442": "comedy-punda-kaatriya",
+    "1554049009319018526": "seeman-buhaha",
     "1554049432436084787": "ommala-mmmmm",
-    "1554049545636282439": "comedy-punda-kaatriya"
+    "1554049545636282439": "siragadippom-naango"
   },
   "randomRotation": true,
-  "masterSoundPreset": "comedy-punda-kaatriya"
+  "masterSoundPreset": "comedy-punda-kaatriya",
+  "playbackMode": "one-by-one",
+  "soundEnabled": true
 }

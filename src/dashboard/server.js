@@ -192,8 +192,30 @@ function startDashboard(clientProvider, config) {
 
     // 5. Voice & Bot Control API
     const { getVoiceConnection } = require('@discordjs/voice');
-    const { joinTargetVoice, leaveTargetVoice } = require('../voice.js');
+    const { 
+        joinTargetVoice, 
+        leaveTargetVoice, 
+        connectAll, 
+        disconnectAll, 
+        connectBot, 
+        disconnectBot, 
+        isBotManuallyDisconnected, 
+        isGlobalVoiceActive 
+    } = require('../voice.js');
     const { playSoundOnConnection, stopSound, getAudioStatus, getActivePlayingSounds, SOUND_PRESETS, MP3_SOUNDS } = require('../audio.js');
+    const { 
+        getPlaybackMode,
+        setPlaybackMode,
+        getCurrentTurnBotId,
+        startTurnCycle,
+        stopTurnCycle,
+        triggerManualBotTurn,
+        playNextTurn,
+        playBotNow,
+        stopBotNow,
+        setBotVolume,
+        setBotMute
+    } = require('../turn-manager.js');
     const { 
         getBotSound, 
         getUniqueSoundForBot,
@@ -213,6 +235,10 @@ function startDashboard(clientProvider, config) {
             const clients = getAllClients();
             const audioStatus = getAudioStatus();
             const botAssignments = getAllBotSounds();
+            const currentTurnId = getCurrentTurnBotId();
+            const settings = readSettings();
+            const botVolumes = settings.botVolumes || {};
+            const botMuted = settings.botMuted || {};
             const botList = [];
 
             for (const c of clients) {
@@ -233,6 +259,7 @@ function startDashboard(clientProvider, config) {
 
                 const assignedSound = botAssignments[c.user.id] || getBotSound(c.user.id);
                 const currentPlayingSound = (audioStatus.streamSounds && audioStatus.streamSounds[c.user.id]) || assignedSound;
+                const isSpeakingNow = isConnectedToVoice && (audioStatus.activeKeys.includes(c.user.id) || currentTurnId === c.user.id);
 
                 botList.push({
                     id: c.user.id,
@@ -242,23 +269,30 @@ function startDashboard(clientProvider, config) {
                     isReady: Boolean(c.isReady && c.isReady()),
                     inVoice: isConnectedToVoice,
                     voiceChannel: connectedVoiceChannel,
-                    isPlaying: isConnectedToVoice && audioStatus.activeKeys.includes(c.user.id),
+                    isPlaying: isSpeakingNow,
+                    isCurrentTurn: currentTurnId === c.user.id,
                     assignedSound: assignedSound,
-                    activeSound: currentPlayingSound
+                    activeSound: currentPlayingSound,
+                    volume: botVolumes[c.user.id] !== undefined ? botVolumes[c.user.id] : 80,
+                    muted: Boolean(botMuted[c.user.id]),
+                    isManuallyDisconnected: isBotManuallyDisconnected(c.user.id)
                 });
             }
 
             const availableSoundsList = getAvailableSounds();
 
             res.json({
-                soundEnabled: audioStatus.isPlaying,
+                soundEnabled: audioStatus.isPlaying || (settings.soundEnabled !== false),
+                globalVoiceActive: isGlobalVoiceActive(),
                 currentSound: currentSoundSelection,
                 activeStreamsCount: audioStatus.activeStreamsCount,
                 availableSounds: availableSoundsList.map(s => s.id),
                 uploadedSoundIds: getUploadedSoundIds(),
                 soundPresetsList: availableSoundsList,
                 botAssignments: botAssignments,
-                randomRotation: readSettings().randomRotation !== false,
+                randomRotation: settings.randomRotation !== false,
+                playbackMode: getPlaybackMode(),
+                currentTurnBotId: currentTurnId,
                 soundsFolder: SOUNDS_DIR,
                 bots: botList
             });
@@ -321,21 +355,13 @@ function startDashboard(clientProvider, config) {
             const botIds = clients.filter(c => c.user).map(c => c.user.id);
             const assignments = randomizeAllBotSounds(botIds);
 
-            for (const c of clients) {
-                if (!c.user) continue;
-                const assigned = assignments[c.user.id] || getUniqueSoundForBot(c.user.id);
-                for (const guild of c.guilds.cache.values()) {
-                    const conn = getVoiceConnection(guild.id, c.user.id);
-                    if (conn && conn.state.status !== 'destroyed') {
-                        playSoundOnConnection(conn, assigned, { botId: c.user.id });
-                    }
-                }
-            }
+            startTurnCycle();
 
             res.json({
                 success: true,
                 message: 'All bots successfully randomized with unique uploaded sounds!',
                 assignments,
+                playbackMode: getPlaybackMode(),
                 status: getAudioStatus()
             });
         } catch (e) {
@@ -353,9 +379,30 @@ function startDashboard(clientProvider, config) {
                 : !Boolean(settings.randomRotation !== false);
             writeSettings(settings);
 
+            startTurnCycle();
+
             res.json({
                 success: true,
-                randomRotation: settings.randomRotation
+                randomRotation: settings.randomRotation,
+                playbackMode: getPlaybackMode()
+            });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // Toggle between One-by-One (turn-based sequential) and Simultaneous playback mode
+    app.post('/api/voice/toggle-playback-mode', (req, res) => {
+        try {
+            const { mode } = req.body;
+            const current = getPlaybackMode();
+            const newMode = mode || (current === 'one-by-one' ? 'simultaneous' : 'one-by-one');
+            const updated = setPlaybackMode(newMode);
+
+            res.json({
+                success: true,
+                playbackMode: updated,
+                status: getAudioStatus()
             });
         } catch (e) {
             res.status(500).json({ error: e.message });
@@ -370,19 +417,11 @@ function startDashboard(clientProvider, config) {
 
             if (randomize || sound === 'random') {
                 const assignments = randomizeAllBotSounds(botIds);
-                for (const c of clients) {
-                    if (!c.user) continue;
-                    const assigned = assignments[c.user.id] || getUniqueSoundForBot(c.user.id);
-                    for (const guild of c.guilds.cache.values()) {
-                        const conn = getVoiceConnection(guild.id, c.user.id);
-                        if (conn && conn.state.status !== 'destroyed') {
-                            playSoundOnConnection(conn, assigned, { botId: c.user.id });
-                        }
-                    }
-                }
+                startTurnCycle();
                 return res.json({
                     success: true,
                     randomized: true,
+                    playbackMode: getPlaybackMode(),
                     botAssignments: getAllBotSounds(),
                     status: getAudioStatus()
                 });
@@ -393,36 +432,13 @@ function startDashboard(clientProvider, config) {
             if (botId) {
                 // Assign sound, resolving any collisions with other bots automatically
                 const assignments = setBotSound(botId, sound, botIds);
-                const targetBot = clients.find(c => c.user && c.user.id === botId);
-                if (targetBot) {
-                    for (const guild of targetBot.guilds.cache.values()) {
-                        const conn = getVoiceConnection(guild.id, targetBot.user.id);
-                        if (conn && conn.state.status !== 'destroyed') {
-                            playSoundOnConnection(conn, sound, { botId: targetBot.user.id });
-                        }
-                    }
-                }
-
-                // If another bot had to be reassigned to avoid duplicate sound:
-                const audioStatus = getAudioStatus();
-                for (const c of clients) {
-                    if (!c.user || c.user.id === botId) continue;
-                    const reassigned = assignments[c.user.id];
-                    const currentlyPlaying = audioStatus.streamSounds && audioStatus.streamSounds[c.user.id];
-                    if (reassigned && currentlyPlaying === sound) {
-                        for (const guild of c.guilds.cache.values()) {
-                            const conn = getVoiceConnection(guild.id, c.user.id);
-                            if (conn && conn.state.status !== 'destroyed') {
-                                playSoundOnConnection(conn, reassigned, { botId: c.user.id });
-                            }
-                        }
-                    }
-                }
+                triggerManualBotTurn(botId, sound);
 
                 res.json({
                     success: true,
                     botId,
                     sound,
+                    playbackMode: getPlaybackMode(),
                     botAssignments: getAllBotSounds(),
                     status: getAudioStatus()
                 });
@@ -438,30 +454,20 @@ function startDashboard(clientProvider, config) {
     app.post('/api/voice/toggle-sound', (req, res) => {
         try {
             const { enabled } = req.body;
-            const clients = getAllClients();
+            const settings = readSettings();
+            settings.soundEnabled = enabled !== false;
+            writeSettings(settings);
 
             if (enabled === false) {
-                stopSound();
+                stopTurnCycle();
             } else {
-                // Give every bot a guaranteed UNIQUE uploaded sound
-                const activeSoFar = [];
-                for (const c of clients) {
-                    if (!c.user) continue;
-                    const botSound = getUniqueSoundForBot(c.user.id, activeSoFar);
-                    activeSoFar.push(botSound);
-
-                    for (const guild of c.guilds.cache.values()) {
-                        const conn = getVoiceConnection(guild.id, c.user.id);
-                        if (conn && conn.state.status !== 'destroyed') {
-                            playSoundOnConnection(conn, botSound, { botId: c.user.id });
-                        }
-                    }
-                }
+                startTurnCycle();
             }
 
             res.json({
                 success: true,
                 soundEnabled: enabled !== false,
+                playbackMode: getPlaybackMode(),
                 botAssignments: getAllBotSounds(),
                 status: getAudioStatus()
             });
@@ -478,19 +484,9 @@ function startDashboard(clientProvider, config) {
 
             // Randomize all bots with unique sounds
             const assignments = randomizeAllBotSounds(botIds);
+            startTurnCycle();
 
-            for (const c of clients) {
-                if (!c.user) continue;
-                const assigned = assignments[c.user.id] || getUniqueSoundForBot(c.user.id);
-                for (const guild of c.guilds.cache.values()) {
-                    const conn = getVoiceConnection(guild.id, c.user.id);
-                    if (conn && conn.state.status !== 'destroyed') {
-                        playSoundOnConnection(conn, assigned, { botId: c.user.id });
-                    }
-                }
-            }
-
-            res.json({ success: true, assignments, status: getAudioStatus() });
+            res.json({ success: true, assignments, playbackMode: getPlaybackMode(), status: getAudioStatus() });
         } catch (e) {
             res.status(500).json({ error: e.message });
         }
@@ -499,36 +495,85 @@ function startDashboard(clientProvider, config) {
     app.post('/api/voice/action', (req, res) => {
         try {
             const { action, botId, channelName = 'General Lounge' } = req.body;
-            const clients = getAllClients();
 
             if (action === 'join-all') {
-                for (const c of clients) {
-                    if (c.user) joinTargetVoice(c, channelName);
-                }
+                connectAll(channelName);
             } else if (action === 'leave-all') {
-                for (const c of clients) {
-                    if (!c.user) continue;
-                    for (const guild of c.guilds.cache.values()) {
-                        leaveTargetVoice(guild.id, c.user.id);
-                    }
-                }
-                stopSound();
+                disconnectAll();
             } else if (action === 'join-bot') {
-                const targetBot = clients.find(c => c.user && c.user.id === botId);
-                if (targetBot) {
-                    joinTargetVoice(targetBot, channelName);
-                }
+                if (botId) connectBot(botId, channelName);
             } else if (action === 'leave-bot') {
-                const targetBot = clients.find(c => c.user && c.user.id === botId);
-                if (targetBot) {
-                    for (const guild of targetBot.guilds.cache.values()) {
-                        leaveTargetVoice(guild.id, targetBot.user.id);
-                    }
-                    stopSound(targetBot.user.id);
-                }
+                if (botId) disconnectBot(botId);
             }
 
             res.json({ success: true, action, botId });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // Individual Bot Controls
+    app.post('/api/voice/bot/connect', (req, res) => {
+        try {
+            const { botId, channelName = 'General Lounge' } = req.body;
+            if (!botId) return res.status(400).json({ error: 'botId required' });
+            const success = connectBot(botId, channelName);
+            res.json({ success, botId });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    app.post('/api/voice/bot/disconnect', (req, res) => {
+        try {
+            const { botId } = req.body;
+            if (!botId) return res.status(400).json({ error: 'botId required' });
+            const success = disconnectBot(botId);
+            res.json({ success, botId });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    app.post('/api/voice/bot/play', (req, res) => {
+        try {
+            const { botId, sound } = req.body;
+            if (!botId) return res.status(400).json({ error: 'botId required' });
+            playBotNow(botId, sound);
+            res.json({ success: true, botId, sound });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    app.post('/api/voice/bot/stop', (req, res) => {
+        try {
+            const { botId } = req.body;
+            if (!botId) return res.status(400).json({ error: 'botId required' });
+            stopBotNow(botId);
+            res.json({ success: true, botId });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    app.post('/api/voice/bot/volume', (req, res) => {
+        try {
+            const { botId, volume } = req.body;
+            if (!botId) return res.status(400).json({ error: 'botId required' });
+            const savedVol = setBotVolume(botId, volume);
+            res.json({ success: true, botId, volume: savedVol });
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    app.post('/api/voice/bot/mute', (req, res) => {
+        try {
+            const { botId, muted } = req.body;
+            if (!botId) return res.status(400).json({ error: 'botId required' });
+            const savedMuted = setBotMute(botId, muted);
+            res.json({ success: true, botId, muted: savedMuted });
         } catch (e) {
             res.status(500).json({ error: e.message });
         }
