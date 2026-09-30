@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { generateWelcomeCard, getOrdinal } = require('../welcome-card.js');
 
 function getSettings() {
     const p = path.join(__dirname, '../../settings.json');
@@ -34,6 +35,36 @@ module.exports = async (client, member) => {
                 .setTimestamp();
 
             await logChannel.send({ embeds: [embed] }).catch(() => null);
+        }
+    }
+
+    // 3. Custom Image Welcome Banner & Message
+    const welcomeModule = settings.modules.welcome || { enabled: true, channel: 'welcome' };
+    if (welcomeModule.enabled !== false) {
+        const targetChannel = 
+            member.guild.channels.cache.find(c => c.isTextBased() && c.name.toLowerCase() === (welcomeModule.channel || 'welcome').toLowerCase())
+            || member.guild.channels.cache.find(c => c.isTextBased() && c.name.toLowerCase().includes('welcome'))
+            || member.guild.systemChannel
+            || member.guild.channels.cache.find(c => c.isTextBased() && c.name.toLowerCase().includes('general'))
+            || member.guild.channels.cache.find(c => c.isTextBased());
+
+        if (targetChannel) {
+            try {
+                const cardBuffer = await generateWelcomeCard(member);
+                const attachment = new AttachmentBuilder(cardBuffer, { name: 'welcome.png' });
+                const ordinal = getOrdinal(member.guild.memberCount);
+
+                // Exact message format from user screenshot:
+                // Welcome @† ɅMX ᶻ ᶻ 1 ! to LORA COMMUNITY 💖! You are the 179th member!
+                const messageContent = `Welcome <@${member.id}> to **${member.guild.name}** 💖! You are the ${ordinal} member!`;
+
+                await targetChannel.send({
+                    content: messageContent,
+                    files: [attachment]
+                });
+            } catch (err) {
+                console.error('[Welcome Card Error]:', err.message);
+            }
         }
     }
 };

@@ -27,6 +27,7 @@ function createDiscordClient(privileged = false) {
           ]
         : [
             GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMembers,
             GatewayIntentBits.GuildMessages,
             GatewayIntentBits.GuildMessageReactions,
             GatewayIntentBits.GuildVoiceStates
