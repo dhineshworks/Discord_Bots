@@ -29,6 +29,61 @@
     <!-- CRT SCANLINE / VIGNETTE OVERLAY -->
     <div class="cyber-crt-overlay"></div>
 
+    <!-- 🔐 CYBERDECK SECURITY GATEWAY / LOGIN TERMINAL -->
+    <div id="cyber-auth-gateway" class="cyber-auth-gateway">
+        <div class="cyber-auth-box">
+            <div class="cyber-auth-header">
+                <div class="cyber-auth-logo">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="cyber-auth-title">
+                    <h2>CODEX // SECURITY GATEWAY</h2>
+                    <span>RESTRICTED ACCESS TERMINAL v2.4</span>
+                </div>
+            </div>
+            
+            <div class="cyber-auth-status">
+                <span class="auth-status-led"></span>
+                <span>SYSTEM LOCKED // ENTER ROOT CREDENTIALS</span>
+            </div>
+
+            <form id="cyber-login-form" onsubmit="handleCyberLogin(event)">
+                <div class="cyber-input-group">
+                    <label><i class="fa-solid fa-terminal"></i> OPERATOR ID (EMAIL):</label>
+                    <input type="email" id="auth-email-input" class="cyber-text-input" placeholder="dhineshtn0@gmail.com" required autocomplete="username">
+                </div>
+
+                <div class="cyber-input-group">
+                    <label><i class="fa-solid fa-key"></i> SECURITY CIPHER (PASSWORD):</label>
+                    <div class="password-input-wrap">
+                        <input type="password" id="auth-pass-input" class="cyber-text-input" placeholder="••••••••" required autocomplete="current-password">
+                        <button type="button" class="btn-toggle-eye" onclick="togglePassVisibility()" title="Show/Hide Password">
+                            <i class="fa-solid fa-eye" id="eye-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="cyber-auth-remember">
+                    <label class="remember-label">
+                        <input type="checkbox" id="auth-remember-me" checked>
+                        <span>SAVE AUTH TOKEN ON THIS DEVICE</span>
+                    </label>
+                </div>
+
+                <div id="auth-error-msg" class="cyber-auth-error" style="display:none;"></div>
+
+                <button type="submit" id="btn-cyber-login" class="btn-action btn-auth-submit">
+                    <i class="fa-solid fa-unlock-keyhole"></i>
+                    <span>AUTHENTICATE & DECRYPT</span>
+                </button>
+            </form>
+
+            <div class="cyber-auth-footer">
+                <span>ENCRYPTION: AES-256-GCM // HARDWARE OPUS PIPELINE</span>
+            </div>
+        </div>
+    </div>
+
     <!-- MOBILE TOP BAR -->
     <header class="mobile-top-header">
         <div class="mobile-top-left">
@@ -56,6 +111,9 @@
             </div>
             <button class="cyber-fs-btn" id="cyber-fullscreen-btn" title="Toggle Fullscreen Landscape" onclick="toggleCyberFullscreen()">
                 <i class="fa-solid fa-expand"></i>
+            </button>
+            <button class="cyber-logout-btn" onclick="logoutCyberdeck()" title="Exit / Lock Terminal">
+                <i class="fa-solid fa-power-off"></i>
             </button>
         </div>
     </header>
@@ -142,6 +200,19 @@
             </nav>
 
             <div class="sidebar-footer">
+                <!-- LOGGED IN OPERATOR -->
+                <div class="sidebar-operator-card" id="sidebar-operator-card">
+                    <div class="operator-meta">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <div class="operator-text">
+                            <span class="operator-role">COMMANDER</span>
+                            <span class="operator-email" id="operator-email-display">dhineshtn0@gmail.com</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-sidebar-logout" onclick="logoutCyberdeck()" title="Exit Terminal">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
                 <div class="sidebar-pwa-wrap">
                     <button type="button" class="btn-sidebar-install" onclick="triggerPWAInstall()">
                         <i class="fa-solid fa-mobile-screen"></i>

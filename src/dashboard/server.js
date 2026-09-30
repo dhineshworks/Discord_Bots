@@ -32,6 +32,102 @@ function startDashboard(clientProvider, config) {
         }
         next(err);
     });
+
+    // ==========================================
+    // 🔐 AUTHENTICATION LAYER & SESSION MANAGER
+    // ==========================================
+    const crypto = require('crypto');
+    const ADMIN_ID = process.env.ADMIN_EMAIL || 'dhineshtn0@gmail.com';
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'DK@God';
+    const activeSessions = new Map(); // token -> { email, expiresAt }
+
+    function createSessionToken(email) {
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiresAt = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 days valid
+        activeSessions.set(token, { email, expiresAt });
+        return token;
+    }
+
+    function isValidToken(token) {
+        if (!token) return false;
+        const session = activeSessions.get(token);
+        if (!session) return false;
+        if (Date.now() > session.expiresAt) {
+            activeSessions.delete(token);
+            return false;
+        }
+        return true;
+    }
+
+    // Public endpoints before auth
+    app.post('/api/auth/login', (req, res) => {
+        const { id, password } = req.body || {};
+        const cleanId = (id || '').trim().toLowerCase();
+        const cleanPass = (password || '').trim();
+
+        if (cleanId === ADMIN_ID.toLowerCase() && cleanPass === ADMIN_PASSWORD) {
+            const token = createSessionToken(ADMIN_ID);
+            console.log(`[Cyberdeck Auth] 🔓 Access Granted to: ${ADMIN_ID}`);
+            return res.json({
+                success: true,
+                token,
+                user: { email: ADMIN_ID, role: 'Root Commander' },
+                message: 'Access granted. Welcome Commander.'
+            });
+        }
+
+        console.warn(`[Cyberdeck Auth] 🛑 Failed login attempt for: "${cleanId}"`);
+        return res.status(401).json({
+            success: false,
+            error: 'ACCESS DENIED: Invalid Terminal ID or Security Password.'
+        });
+    });
+
+    app.get('/api/auth/check', (req, res) => {
+        const authHeader = req.headers.authorization;
+        let token = null;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.slice(7).trim();
+        } else if (req.query && req.query.token) {
+            token = req.query.token;
+        }
+
+        if (isValidToken(token)) {
+            const session = activeSessions.get(token);
+            return res.json({ authenticated: true, user: session.email });
+        }
+        return res.json({ authenticated: false });
+    });
+
+    app.post('/api/auth/logout', (req, res) => {
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.slice(7).trim();
+            activeSessions.delete(token);
+        }
+        res.json({ success: true, message: 'Terminal disconnected.' });
+    });
+
+    // Protect all remaining /api/* routes
+    app.use('/api', (req, res, next) => {
+        const authHeader = req.headers.authorization;
+        let token = null;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.slice(7).trim();
+        } else if (req.query && req.query.token) {
+            token = req.query.token;
+        }
+
+        if (isValidToken(token)) {
+            return next();
+        }
+
+        return res.status(401).json({
+            error: 'Unauthorized: Valid Cyberdeck Terminal authorization required.',
+            authenticated: false
+        });
+    });
+
     app.use(express.static(path.join(__dirname, 'public')));
 
     function readSettings() {

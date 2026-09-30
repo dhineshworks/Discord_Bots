@@ -1,14 +1,192 @@
+// ================================================================
+// 🔐 CYBERDECK AUTHENTICATION & FETCH INTERCEPTOR
+// ================================================================
+let statsInterval = null;
+let voiceInterval = null;
+
+function getAuthToken() {
+    return localStorage.getItem('codex_auth_token') || sessionStorage.getItem('codex_auth_token') || null;
+}
+
+function setAuthToken(token, remember = true) {
+    if (remember) {
+        localStorage.setItem('codex_auth_token', token);
+    } else {
+        sessionStorage.setItem('codex_auth_token', token);
+    }
+}
+
+function removeAuthToken() {
+    localStorage.removeItem('codex_auth_token');
+    sessionStorage.removeItem('codex_auth_token');
+}
+
+// Global fetch wrapper to automatically inject Authorization token
+const originalFetch = window.fetch;
+window.fetch = async function (resource, init = {}) {
+    init = init || {};
+    init.headers = init.headers || {};
+
+    const token = getAuthToken();
+    if (token) {
+        if (init.headers instanceof Headers) {
+            init.headers.set('Authorization', `Bearer ${token}`);
+        } else if (Array.isArray(init.headers)) {
+            init.headers.push(['Authorization', `Bearer ${token}`]);
+        } else {
+            init.headers['Authorization'] = `Bearer ${token}`;
+        }
+    }
+
+    const res = await originalFetch(resource, init);
+
+    const urlStr = typeof resource === 'string' ? resource : (resource.url || '');
+    if (res.status === 401 && urlStr.includes('/api/') && !urlStr.includes('/api/auth/login')) {
+        showAuthGateway(true);
+        stopPolling();
+    }
+
+    return res;
+};
+
+function showAuthGateway(show = true) {
+    const gateway = document.getElementById('cyber-auth-gateway');
+    if (!gateway) return;
+    if (show) {
+        gateway.classList.add('active');
+        const emailInput = document.getElementById('auth-email-input');
+        if (emailInput && !emailInput.value) emailInput.value = 'dhineshtn0@gmail.com';
+    } else {
+        gateway.classList.remove('active');
+    }
+}
+
+function startPolling() {
+    if (statsInterval) clearInterval(statsInterval);
+    if (voiceInterval) clearInterval(voiceInterval);
+    fetchStats();
+    fetchVoiceStatus();
+    loadDiscordMembers();
+    loadMessageHistory();
+    statsInterval = setInterval(fetchStats, 3000);
+    voiceInterval = setInterval(fetchVoiceStatus, 2500);
+}
+
+function stopPolling() {
+    if (statsInterval) clearInterval(statsInterval);
+    if (voiceInterval) clearInterval(voiceInterval);
+    statsInterval = null;
+    voiceInterval = null;
+}
+
+async function checkAuthSession() {
+    const token = getAuthToken();
+    if (!token) {
+        showAuthGateway(true);
+        return false;
+    }
+
+    try {
+        const res = await fetch('/api/auth/check');
+        const data = await res.json();
+        if (data.authenticated) {
+            showAuthGateway(false);
+            const display = document.getElementById('operator-email-display');
+            if (display) display.innerText = data.user || 'dhineshtn0@gmail.com';
+            startPolling();
+            return true;
+        } else {
+            removeAuthToken();
+            showAuthGateway(true);
+            return false;
+        }
+    } catch (e) {
+        showAuthGateway(true);
+        return false;
+    }
+}
+
+async function handleCyberLogin(event) {
+    event.preventDefault();
+    const emailInput = document.getElementById('auth-email-input');
+    const passInput = document.getElementById('auth-pass-input');
+    const rememberMe = document.getElementById('auth-remember-me').checked;
+    const errorBox = document.getElementById('auth-error-msg');
+    const submitBtn = document.getElementById('btn-cyber-login');
+
+    const id = emailInput.value.trim();
+    const password = passInput.value.trim();
+
+    if (!id || !password) return;
+
+    try {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> VERIFYING CIPHER...';
+        errorBox.style.display = 'none';
+
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            setAuthToken(data.token, rememberMe);
+            showAuthGateway(false);
+            passInput.value = '';
+            showToast('🔓 Access Granted: Welcome Commander.');
+
+            const display = document.getElementById('operator-email-display');
+            if (display) display.innerText = data.user.email || 'dhineshtn0@gmail.com';
+
+            startPolling();
+        } else {
+            errorBox.innerText = `[!] ${data.error || 'ACCESS DENIED: Invalid credentials.'}`;
+            errorBox.style.display = 'block';
+            passInput.value = '';
+            passInput.focus();
+        }
+    } catch (err) {
+        errorBox.innerText = '[!] SYSTEM ERROR: Failed to reach authentication gateway.';
+        errorBox.style.display = 'block';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-unlock-keyhole"></i> <span>AUTHENTICATE & DECRYPT</span>';
+    }
+}
+
+async function logoutCyberdeck() {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (_) {}
+
+    removeAuthToken();
+    stopPolling();
+    showAuthGateway(true);
+    showToast('🔒 Terminal Locked // Operator Disconnected.');
+}
+
+function togglePassVisibility() {
+    const input = document.getElementById('auth-pass-input');
+    const icon = document.getElementById('eye-icon');
+    if (!input || !icon) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fa-solid fa-eye';
+    }
+}
+
 // Dashboard Client App
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initSettingsForm();
     initMatrixRain();
-    fetchStats();
-    fetchVoiceStatus();
-    loadDiscordMembers();
-    loadMessageHistory();
-    setInterval(fetchStats, 3000); // Live poll every 3 seconds
-    setInterval(fetchVoiceStatus, 2500); // Live poll voice every 2.5 seconds
+    checkAuthSession();
 });
 
 // Tab Navigation & Mobile Drawer
