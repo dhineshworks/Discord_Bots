@@ -104,5 +104,65 @@ module.exports = async (client, interaction) => {
             await interaction.reply({ content: '✅ Your reaction vote has been recorded!', ephemeral: true });
             return;
         }
+
+        // Music Controls
+        if (customId.startsWith('music_')) {
+            const musicManager = require('../music-manager.js');
+            const queue = musicManager.getQueue(guild.id);
+
+            if (!queue || !queue.playing) {
+                return interaction.reply({ content: '❌ No music is currently playing in this server.', ephemeral: true });
+            }
+
+            if (customId === 'music_toggle_pause') {
+                if (queue.paused) {
+                    musicManager.resume(guild.id);
+                    await interaction.reply({ content: '▶️ Resumed music playback.', ephemeral: true });
+                } else {
+                    musicManager.pause(guild.id);
+                    await interaction.reply({ content: '⏸️ Paused music playback.', ephemeral: true });
+                }
+                return;
+            }
+
+            if (customId === 'music_skip') {
+                const title = queue.currentSong?.title || 'current song';
+                musicManager.skip(guild.id);
+                await interaction.reply({ content: `⏭️ Skipped **${title}**!`, ephemeral: true });
+                return;
+            }
+
+            if (customId === 'music_stop') {
+                musicManager.stop(guild.id);
+                await interaction.reply({ content: '⏹️ Stopped music playback and cleared the queue.' });
+                return;
+            }
+
+            if (customId === 'music_shuffle') {
+                const success = musicManager.shuffle(guild.id);
+                if (success) {
+                    await interaction.reply({ content: `🔀 Shuffled **${queue.songs.length}** upcoming tracks in queue!`, ephemeral: true });
+                } else {
+                    await interaction.reply({ content: '❌ Need at least 2 upcoming tracks in queue to shuffle.', ephemeral: true });
+                }
+                return;
+            }
+
+            if (customId === 'music_queue') {
+                const embed = new EmbedBuilder()
+                    .setColor('#5865F2')
+                    .setTitle(`🎵 Music Queue - ${guild.name}`)
+                    .setDescription(
+                        `**Now Playing:**\n[${queue.currentSong?.title || 'None'}](${queue.currentSong?.url || '#'}) \`[${queue.currentSong?.duration || '--'}]\`\n\n` +
+                        `**Upcoming (${queue.songs.length} tracks):**\n` +
+                        (queue.songs.length === 0 
+                            ? '_Queue is empty!_' 
+                            : queue.songs.slice(0, 8).map((s, i) => `\`${i + 1}.\` [${s.title}](${s.url}) \`[${s.duration}]\``).join('\n')
+                        )
+                    );
+                await interaction.reply({ embeds: [embed], ephemeral: true });
+                return;
+            }
+        }
     }
 };

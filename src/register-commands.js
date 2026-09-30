@@ -4,12 +4,14 @@ const generalCmds = require('./commands/general.js');
 const modCmds = require('./commands/moderation.js');
 const ticketCmds = require('./commands/tickets.js');
 const engageCmds = require('./commands/engagement.js');
+const musicCmds = require('./commands/music.js');
 
 const allCommands = [
     ...generalCmds,
     ...modCmds,
     ...ticketCmds,
-    ...engageCmds
+    ...engageCmds,
+    ...musicCmds
 ].map(c => c.data.toJSON());
 
 async function registerSlashCommands(passedClientId) {

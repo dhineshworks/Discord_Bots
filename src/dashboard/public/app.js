@@ -6,8 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchVoiceStatus();
     loadDiscordMembers();
     loadMessageHistory();
+    fetchMusicStatus();
+    loadMusicVoiceChannels();
     setInterval(fetchStats, 3000); // Live poll every 3 seconds
     setInterval(fetchVoiceStatus, 2500); // Live poll voice every 2.5 seconds
+    setInterval(fetchMusicStatus, 2500); // Live poll music status every 2.5s
 });
 
 // Tab Navigation
@@ -849,6 +852,225 @@ function resetDMForm() {
     onMemberSelected();
     updateLivePreview();
     showToast('Form cleared.');
+}
+
+// ==========================================
+// 🎵 LIVE MUSIC PLAYER DASHBOARD CONTROLLER
+// ==========================================
+let currentMusicStatus = null;
+
+async function loadMusicVoiceChannels() {
+    try {
+        const res = await fetch('/api/music/voice-channels');
+        const data = await res.json();
+        const select = document.getElementById('music-voice-select');
+        if (!select) return;
+
+        if (data.channels && data.channels.length > 0) {
+            select.innerHTML = data.channels.map(ch => 
+                `<option value="${ch.id}">${escapeHtml(ch.name)} (${escapeHtml(ch.guildName)})</option>`
+            ).join('');
+        } else {
+            select.innerHTML = '<option value="">Auto Voice Channel</option>';
+        }
+    } catch (e) {
+        console.warn('Failed to load voice channels for music:', e);
+    }
+}
+
+async function fetchMusicStatus() {
+    try {
+        const res = await fetch('/api/music/status');
+        const data = await res.json();
+        currentMusicStatus = data;
+        updateMusicPlayerUI(data);
+    } catch (e) {
+        // silent fail on poll
+    }
+}
+
+function updateMusicPlayerUI(data) {
+    const np = data.nowPlaying;
+    const isPlaying = data.active && np && np.song;
+
+    // Cover art
+    const coverEl = document.getElementById('music-np-cover');
+    if (coverEl) {
+        coverEl.src = isPlaying && np.song.thumbnail 
+            ? np.song.thumbnail 
+            : 'https://assets.stickpng.com/images/580b57fcd9996e24bc43c537.png';
+    }
+
+    // EQ bars
+    const eqBars = document.getElementById('music-eq-bars');
+    if (eqBars) {
+        eqBars.style.display = isPlaying && !data.paused ? 'flex' : 'none';
+    }
+
+    // Status pill
+    const pill = document.getElementById('music-status-pill');
+    const pillText = document.getElementById('music-status-text');
+    if (pill && pillText) {
+        if (!isPlaying) {
+            pill.style.background = 'rgba(100, 116, 139, 0.2)';
+            pill.style.color = '#94a3b8';
+            pillText.innerText = 'NO MUSIC PLAYING';
+        } else if (data.paused) {
+            pill.style.background = 'rgba(245, 158, 11, 0.2)';
+            pill.style.color = '#f59e0b';
+            pillText.innerText = 'PAUSED';
+        } else {
+            pill.style.background = 'rgba(16, 185, 129, 0.2)';
+            pill.style.color = '#10b981';
+            pillText.innerText = 'LIVE PLAYING';
+        }
+    }
+
+    // Song meta
+    const titleEl = document.getElementById('music-np-title');
+    const artistEl = document.getElementById('music-np-artist');
+    if (titleEl) titleEl.innerText = isPlaying ? np.song.title : 'Nothing Playing Right Now';
+    if (artistEl) artistEl.innerText = isPlaying ? `by ${np.song.artist} • Requested by @${np.song.requester?.tag || 'User'}` : 'Choose a song below or type /play in Discord';
+
+    // Progress bar & timestamps
+    const fillEl = document.getElementById('music-progress-fill');
+    const curTimeEl = document.getElementById('music-np-current');
+    const totTimeEl = document.getElementById('music-np-total');
+    if (fillEl && isPlaying && np.totalSec > 0) {
+        const pct = Math.min(Math.max((np.currentSec / np.totalSec) * 100, 0), 100);
+        fillEl.style.width = `${pct}%`;
+    } else if (fillEl) {
+        fillEl.style.width = '0%';
+    }
+    if (curTimeEl) curTimeEl.innerText = isPlaying ? np.currentTime : '00:00';
+    if (totTimeEl) totTimeEl.innerText = isPlaying ? np.totalTime : '00:00';
+
+    // Play/Pause button icon
+    const icon = document.getElementById('mbtn-playpause-icon');
+    if (icon) {
+        if (isPlaying && !data.paused) {
+            icon.className = 'fa-solid fa-pause';
+        } else {
+            icon.className = 'fa-solid fa-play';
+        }
+    }
+
+    // Volume
+    const volSlider = document.getElementById('music-vol-slider');
+    const volVal = document.getElementById('music-vol-val');
+    if (volSlider && data.volume && document.activeElement !== volSlider) {
+        volSlider.value = data.volume;
+    }
+    if (volVal && data.volume) {
+        volVal.innerText = `${data.volume}%`;
+    }
+
+    // Queue count & list
+    const countBadge = document.getElementById('music-queue-count');
+    const queueList = document.getElementById('music-queue-items');
+    const queue = data.queue || [];
+    if (countBadge) countBadge.innerText = `${queue.length} Songs`;
+
+    if (queueList) {
+        if (queue.length === 0) {
+            queueList.innerHTML = `
+                <div class="queue-empty">
+                    <i class="fa-solid fa-compact-disc"></i>
+                    <p>Queue is empty! Search a song above or use <code>/play &lt;song&gt;</code> in Discord to start playing.</p>
+                </div>
+            `;
+        } else {
+            queueList.innerHTML = queue.map((song, i) => `
+                <div class="queue-item">
+                    <span class="queue-pos">#${i + 1}</span>
+                    <img class="queue-thumb" src="${song.thumbnail || 'https://assets.stickpng.com/images/580b57fcd9996e24bc43c537.png'}" alt="cover" />
+                    <div class="queue-info">
+                        <h4>${escapeHtml(song.title)}</h4>
+                        <p>${escapeHtml(song.artist)} • Requested by @${escapeHtml(song.requester?.tag || 'User')}</p>
+                    </div>
+                    <span class="queue-duration">${song.duration}</span>
+                </div>
+            `).join('');
+        }
+    }
+}
+
+async function dashboardMusicPlayFromInput() {
+    const input = document.getElementById('music-search-input');
+    const voiceSelect = document.getElementById('music-voice-select');
+    const query = input?.value?.trim();
+    if (!query) {
+        showToast('Please enter a song name or link to play!', 'warning');
+        return;
+    }
+
+    const voiceChannelId = voiceSelect?.value || null;
+    showToast(`Searching & queuing "${query}"...`);
+
+    try {
+        const res = await fetch('/api/music/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'play', query, voiceChannelId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`🎵 Queued "${data.result.song.title}"!`, 'success');
+            if (input) input.value = '';
+            fetchMusicStatus();
+        } else {
+            showToast(`❌ ${data.error || 'Failed to play track'}`, 'error');
+        }
+    } catch (e) {
+        showToast(`❌ Error: ${e.message}`, 'error');
+    }
+}
+
+async function dashboardMusicTogglePlay() {
+    if (!currentMusicStatus || !currentMusicStatus.active) {
+        showToast('No track is currently playing. Search a song to start!', 'info');
+        return;
+    }
+    const action = currentMusicStatus.paused ? 'resume' : 'pause';
+    dashboardMusicControl(action);
+}
+
+async function dashboardMusicControl(action) {
+    try {
+        const res = await fetch('/api/music/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const labels = {
+                pause: '⏸️ Paused playback',
+                resume: '▶️ Resumed playback',
+                skip: '⏭️ Skipped to next track',
+                stop: '⏹️ Stopped music & cleared queue',
+                shuffle: '🔀 Queue shuffled!'
+            };
+            showToast(labels[action] || 'Command executed', 'success');
+            setTimeout(fetchMusicStatus, 300);
+        } else {
+            showToast(`❌ ${data.error || 'Control action failed'}`, 'error');
+        }
+    } catch (e) {
+        showToast(`❌ Error: ${e.message}`, 'error');
+    }
+}
+
+async function dashboardMusicSetVolume(vol) {
+    const valEl = document.getElementById('music-vol-val');
+    if (valEl) valEl.innerText = `${vol}%`;
+    try {
+        await fetch('/api/music/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'volume', volume: vol })
+        });
+    } catch (_) {}
 }
 
 
