@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initSettingsForm();
+    initMatrixRain();
     fetchStats();
     fetchVoiceStatus();
     loadDiscordMembers();
@@ -378,12 +379,18 @@ function renderBotsGrid(bots) {
         const isMuted = Boolean(bot.muted);
         const volumeVal = bot.volume !== undefined ? bot.volume : 80;
 
-        let transmittingTag = '<span class="bot-badge-tag idle">Idle</span>';
+        let transmittingTag = '<span class="bot-badge-tag idle">[STATUS: STANDBY]</span>';
+        let animatedEq = '';
         if (inVoice) {
             if (bot.isPlaying) {
-                transmittingTag = `<span class="bot-badge-tag transmitting"><i class="fa-solid fa-wave-square fa-fade"></i> SPEAKING: ${escapeHtml(activeSound)}</span>`;
+                transmittingTag = `<span class="bot-badge-tag transmitting"><i class="fa-solid fa-wave-square fa-fade"></i> TRANSMITTING: ${escapeHtml(activeSound)}</span>`;
+                animatedEq = `
+                    <div class="cyber-eq-bars">
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                `;
             } else if (isSoundActive) {
-                transmittingTag = `<span class="bot-badge-tag in-queue"><i class="fa-solid fa-hourglass-half"></i> In Queue: ${escapeHtml(activeSound)}</span>`;
+                transmittingTag = `<span class="bot-badge-tag in-queue"><i class="fa-solid fa-hourglass-half"></i> QUEUED: ${escapeHtml(activeSound)}</span>`;
             }
         }
 
@@ -395,11 +402,11 @@ function renderBotsGrid(bots) {
         const synthSounds = currentSoundPresetsList.filter(s => s.type === 'synth' || !s.file);
 
         const folderOptionsHtml = folderSounds.map(s => `
-            <option value="${s.id}" ${assigned === s.id ? 'selected' : ''}>${s.emoji || '🎵'} ${escapeHtml(s.name)} (${escapeHtml(s.file || s.id)})</option>
+            <option value="${s.id}" ${assigned === s.id ? 'selected' : ''}>[AUDIO] ${escapeHtml(s.name)} (${escapeHtml(s.file || s.id)})</option>
         `).join('');
 
         const synthOptionsHtml = synthSounds.map(s => `
-            <option value="${s.id}" ${assigned === s.id ? 'selected' : ''}>${s.emoji || '🤖'} ${escapeHtml(s.name)}</option>
+            <option value="${s.id}" ${assigned === s.id ? 'selected' : ''}>[SYNTH] ${escapeHtml(s.name)}</option>
         `).join('');
 
         return `
@@ -412,7 +419,7 @@ function renderBotsGrid(bots) {
                     <div class="bot-details">
                         <div class="bot-name-row">
                             <span class="bot-card-name">${escapeHtml(bot.tag)}</span>
-                            <span class="bot-mini-id">#${bot.id.slice(-4)}</span>
+                            <span class="bot-mini-id">NODE_${bot.id.slice(-4)}</span>
                         </div>
                         <div class="${channelClass}">
                             <i class="${channelIcon}"></i>
@@ -422,11 +429,11 @@ function renderBotsGrid(bots) {
                     <div class="bot-quick-toggle">
                         ${inVoice ? `
                             <button class="btn-vc-chip leave" onclick="botToggleVC('${bot.id}', true)" title="Disconnect this bot">
-                                <i class="fa-solid fa-phone-slash"></i> <span>Leave</span>
+                                <i class="fa-solid fa-power-off"></i> <span>SEVER</span>
                             </button>
                         ` : `
                             <button class="btn-vc-chip join" onclick="botToggleVC('${bot.id}', false)" title="Connect this bot to VC">
-                                <i class="fa-solid fa-phone-volume"></i> <span>Join</span>
+                                <i class="fa-solid fa-link"></i> <span>LINK</span>
                             </button>
                         `}
                     </div>
@@ -434,18 +441,21 @@ function renderBotsGrid(bots) {
 
                 <div class="bot-card-badges">
                     ${transmittingTag}
-                    ${isMuted ? '<span class="bot-badge-tag muted-tag"><i class="fa-solid fa-volume-xmark"></i> Muted</span>' : ''}
+                    ${isMuted ? '<span class="bot-badge-tag muted-tag"><i class="fa-solid fa-volume-xmark"></i> MUTED</span>' : ''}
+                    <span class="bot-badge-tag freq-tag">48kHz OPUS</span>
                 </div>
+
+                ${animatedEq}
 
                 <!-- INDIVIDUAL BOT SOUND SELECTOR -->
                 <div class="bot-sound-assign-row">
-                    <label class="bot-sound-label"><i class="fa-solid fa-music"></i> Audio Track:</label>
+                    <label class="bot-sound-label"><i class="fa-solid fa-microchip"></i> AUDIO_STREAM:</label>
                     <select class="bot-sound-dropdown" onchange="assignBotIndividualSound('${bot.id}', this.value)">
-                        <option value="random">🎲 Random Unique Sound</option>
-                        <optgroup label="📁 /sounds Folder (${folderSounds.length} sounds)">
+                        <option value="random">🎲 [SHUFFLE_UNIQUE_PAYLOAD]</option>
+                        <optgroup label="📁 /sounds Directory (${folderSounds.length} items)">
                             ${folderOptionsHtml}
                         </optgroup>
-                        <optgroup label="🤖 Synthesized Sounds">
+                        <optgroup label="🤖 Synthesizer Frequencies">
                             ${synthOptionsHtml}
                         </optgroup>
                     </select>
@@ -458,7 +468,7 @@ function renderBotsGrid(bots) {
                     </button>
                     <div class="bot-volume-slider-wrap">
                         <div class="slider-meta">
-                            <span>Vol</span>
+                            <span class="cyber-label-mono">GAIN</span>
                             <span id="vol-display-${bot.id}">${volumeVal}%</span>
                         </div>
                         <input type="range" class="bot-volume-slider" min="0" max="100" value="${volumeVal}"
@@ -469,11 +479,11 @@ function renderBotsGrid(bots) {
 
                 <!-- PLAY NOW / STOP DIRECT CONTROLS -->
                 <div class="bot-card-actions">
-                    <button class="btn-bot-sub play-btn" onclick="botPlayNow('${bot.id}')" ${!inVoice ? 'disabled title="Connect bot to voice first"' : ''}>
-                        <i class="fa-solid fa-play"></i> <span>Play Now</span>
+                    <button class="btn-bot-sub play-btn" onclick="botPlayNow('${bot.id}')" ${!inVoice ? 'disabled title="Link bot to voice first"' : ''}>
+                        <i class="fa-solid fa-play"></i> <span>EXECUTE</span>
                     </button>
                     <button class="btn-bot-sub stop-btn" onclick="botStopSound('${bot.id}')" ${!inVoice ? 'disabled' : ''}>
-                        <i class="fa-solid fa-stop"></i> <span>Stop</span>
+                        <i class="fa-solid fa-stop"></i> <span>HALT</span>
                     </button>
                 </div>
             </div>
@@ -1050,5 +1060,73 @@ function resetDMForm() {
     updateLivePreview();
     showToast('Form cleared.');
 }
+
+// ================================================================
+// HACKER MATRIX RAIN BACKGROUND ENGINE
+// ================================================================
+function initMatrixRain() {
+    const canvas = document.getElementById('matrix-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const chars = '0123456789ABCDEFΞΨΩ010101<>/*#{}[]=+-~';
+    const fontSize = 14;
+    let columns = Math.floor(canvas.width / fontSize);
+    let drops = Array.from({ length: columns }, () => Math.floor(Math.random() * -50));
+
+    window.addEventListener('resize', () => {
+        columns = Math.floor(canvas.width / fontSize);
+        drops = Array.from({ length: columns }, () => Math.floor(Math.random() * -50));
+    });
+
+    function draw() {
+        ctx.fillStyle = 'rgba(4, 8, 16, 0.12)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.font = `${fontSize}px "Share Tech Mono", monospace`;
+
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            const x = i * fontSize;
+            const y = drops[i] * fontSize;
+
+            const rand = Math.random();
+            if (rand > 0.94) {
+                ctx.fillStyle = '#ffffff'; // White spark
+            } else if (rand > 0.75) {
+                ctx.fillStyle = '#00e5ff'; // Cyan pulse
+            } else {
+                ctx.fillStyle = '#00ff66'; // Matrix green
+            }
+
+            ctx.fillText(text, x, y);
+
+            if (y > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+    }
+
+    setInterval(draw, 50);
+}
+
+function toggleCyberFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        showToast('💻 Cyberdeck Fullscreen Engaged');
+    } else {
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        showToast('Exit Fullscreen');
+    }
+}
+
 
 
