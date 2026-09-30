@@ -88,7 +88,7 @@ async function generateWelcomeCard(member) {
     const textStartX = 230;
     const memberCount = member.guild.memberCount || 1;
     const ordinalText = getOrdinal(memberCount);
-    const serverName = (member.guild.name || 'COMMUNITY').toUpperCase();
+    const serverName = member.guild.name || 'COMMUNITY';
     const displayName = member.displayName || member.user.username;
 
     // Line 1: Welcome + Name
@@ -110,12 +110,12 @@ async function generateWelcomeCard(member) {
     ctx.fillText(displayName, textStartX + welcomeMeasure, avatarCenterY - 14);
     ctx.restore();
 
-    // Line 2: to SERVER NAME you are the 179th member!
+    // Line 2: to Server Name  You are the 179th member!
     ctx.save();
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 20px sans-serif';
 
-    const line2 = `to ${serverName}  you are the ${ordinalText} member!`;
+    const line2 = `to ${serverName}  You are the ${ordinalText} member!`;
     let line2FontSize = 20;
     while (ctx.measureText(line2).width > 520 && line2FontSize > 14) {
         line2FontSize -= 1;

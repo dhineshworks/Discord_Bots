@@ -278,7 +278,7 @@ module.exports = [
                 const attachment = new AttachmentBuilder(cardBuffer, { name: 'welcome.png' });
                 const ordinal = getOrdinal(interaction.guild.memberCount);
 
-                const messageContent = `Welcome <@${targetMember.id}> to **${interaction.guild.name}** 💖! You are the ${ordinal} member!`;
+                const messageContent = `Welcome <@${targetMember.id}> to ${interaction.guild.name}  You are the ${ordinal} member!`;
 
                 await interaction.editReply({
                     content: messageContent,

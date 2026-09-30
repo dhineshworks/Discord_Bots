@@ -54,9 +54,8 @@ module.exports = async (client, member) => {
                 const attachment = new AttachmentBuilder(cardBuffer, { name: 'welcome.png' });
                 const ordinal = getOrdinal(member.guild.memberCount);
 
-                // Exact message format from user screenshot:
-                // Welcome @† ɅMX ᶻ ᶻ 1 ! to LORA COMMUNITY 💖! You are the 179th member!
-                const messageContent = `Welcome <@${member.id}> to **${member.guild.name}** 💖! You are the ${ordinal} member!`;
+                // Message format: Welcome @User to server name  You are the 179th member!
+                const messageContent = `Welcome <@${member.id}> to ${member.guild.name}  You are the ${ordinal} member!`;
 
                 await targetChannel.send({
                     content: messageContent,
