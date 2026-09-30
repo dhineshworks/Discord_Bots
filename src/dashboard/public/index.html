@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>⚡ CODEX // CYBERPUNK TERMINAL DASHBOARD</title>
+    
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CodeX OS">
+    <meta name="theme-color" content="#040810">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@500;700&display=swap" rel="stylesheet">
@@ -34,6 +46,10 @@
             </div>
         </div>
         <div class="mobile-top-actions">
+            <!-- PWA INSTALL APP BUTTON -->
+            <button class="cyber-install-btn" id="cyber-install-btn" onclick="triggerPWAInstall()" title="Install CodeX App to Mobile">
+                <i class="fa-solid fa-download"></i> <span>INSTALL</span>
+            </button>
             <div class="mobile-status-indicator">
                 <span class="pulse-dot"></span>
                 <span id="mobile-live-tag">SECURE</span>
@@ -126,6 +142,12 @@
             </nav>
 
             <div class="sidebar-footer">
+                <div class="sidebar-pwa-wrap">
+                    <button type="button" class="btn-sidebar-install" onclick="triggerPWAInstall()">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                        <span>INSTALL MOBILE APP</span>
+                    </button>
+                </div>
                 <div class="status-pill">
                     <span class="status-dot"></span>
                     <span id="bot-status-text">Online</span>
@@ -1103,6 +1125,54 @@
             <span>Menu</span>
         </button>
     </nav>
+
+    <!-- PWA INSTALL MODAL (iOS & fallback) -->
+    <div id="pwa-install-modal" class="cyber-modal">
+        <div class="cyber-modal-card">
+            <div class="cyber-modal-header">
+                <div class="cyber-modal-title">
+                    <i class="fa-solid fa-mobile-screen"></i>
+                    <span>INSTALL CODEX // MOBILE APP</span>
+                </div>
+                <button type="button" class="cyber-modal-close" onclick="closeInstallModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="cyber-modal-body">
+                <div class="pwa-app-badge">
+                    <img src="/icon-192.png" alt="App Icon" class="pwa-badge-icon">
+                    <div class="pwa-badge-info">
+                        <h4>CodeX Bot // Cyberdeck</h4>
+                        <span>Native-Like PWA Mobile Application</span>
+                        <div class="pwa-tag-row">
+                            <span class="pwa-tag"><i class="fa-solid fa-bolt"></i> FAST</span>
+                            <span class="pwa-tag"><i class="fa-solid fa-expand"></i> FULLSCREEN</span>
+                            <span class="pwa-tag"><i class="fa-solid fa-wifi"></i> STANDALONE</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="pwa-install-steps">
+                    <div class="pwa-step">
+                        <span class="step-num">A</span>
+                        <div class="step-text">
+                            <strong>Android / Chrome / Edge:</strong>
+                            <p>Tap the button below or open Chrome menu <strong>⋮</strong> and select <strong>"Install app"</strong> / <strong>"Add to Home screen"</strong>.</p>
+                        </div>
+                    </div>
+                    <div class="pwa-step">
+                        <span class="step-num">B</span>
+                        <div class="step-text">
+                            <strong>iPhone / iPad (Safari):</strong>
+                            <p>Tap the <strong>Share</strong> button <i class="fa-solid fa-arrow-up-from-bracket"></i> in Safari, scroll down and tap <strong>"Add to Home Screen"</strong> <i class="fa-regular fa-square-plus"></i>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="cyber-modal-footer">
+                <button id="pwa-native-install-btn" class="btn-action btn-install-confirm" onclick="triggerNativePrompt()">
+                    <i class="fa-solid fa-download"></i> INSTALL APPLICATION TO HOME SCREEN
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>

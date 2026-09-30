@@ -1128,5 +1128,69 @@ function toggleCyberFullscreen() {
     }
 }
 
+// ================================================================
+// PWA SERVICE WORKER REGISTRATION & MOBILE INSTALL MANAGER
+// ================================================================
+let deferredPrompt = null;
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then((reg) => {
+            console.log('⚡ [PWA] Service Worker registered:', reg.scope);
+        }).catch((err) => {
+            console.warn('⚠️ [PWA] Service Worker registration failed:', err);
+        });
+    });
+}
+
+// Capture native install event
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installBtn = document.getElementById('cyber-install-btn');
+    if (installBtn) installBtn.style.display = 'inline-flex';
+});
+
+window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    const installBtn = document.getElementById('cyber-install-btn');
+    if (installBtn) installBtn.style.display = 'none';
+    showToast('🚀 CodeX OS successfully installed as mobile app!');
+});
+
+function triggerPWAInstall() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                showToast('📲 Installing CodeX Web Application...');
+            }
+            deferredPrompt = null;
+        });
+    } else {
+        // Open modal instructions for iOS Safari or manual installation
+        openInstallModal();
+    }
+}
+
+function openInstallModal() {
+    const modal = document.getElementById('pwa-install-modal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeInstallModal() {
+    const modal = document.getElementById('pwa-install-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+function triggerNativePrompt() {
+    if (deferredPrompt) {
+        triggerPWAInstall();
+        closeInstallModal();
+    } else {
+        showToast('ℹ️ Follow the step instructions above for your phone');
+    }
+}
+
 
 
