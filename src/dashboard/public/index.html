@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeX Bot - Discord Bot Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- LEFT SIDEBAR -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-bolt-lightning"></i>
+                </div>
+                <div class="brand-info">
+                    <h2>CodeX Bot</h2>
+                    <span>Discord Bot Dashboard</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="nav-group">
+                    <span class="nav-label">MAIN</span>
+                    <a href="#dashboard" class="nav-item active" data-tab="dashboard">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#direct-message" class="nav-item" data-tab="direct-message">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Direct Messenger</span>
+                    </a>
+                    <a href="#voice-control" class="nav-item" data-tab="voice-control">
+                        <i class="fa-solid fa-volume-high"></i>
+                        <span>Voice & Sound Studio</span>
+                    </a>
+                    <a href="#settings" class="nav-item" data-tab="settings">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>Bot Settings</span>
+                    </a>
+                    <a href="#docs" class="nav-item" data-tab="docs">
+                        <i class="fa-solid fa-book"></i>
+                        <span>Documentation</span>
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <span class="nav-label">COMMANDS</span>
+                    <a href="#general-cmds" class="nav-item" data-tab="general-cmds">
+                        <i class="fa-solid fa-terminal"></i>
+                        <span>General Commands</span>
+                    </a>
+                    <a href="#mod-cmds" class="nav-item" data-tab="mod-cmds">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Moderation Commands</span>
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <span class="nav-label">CONFIGURATION</span>
+                    <a href="#logs" class="nav-item" data-tab="logs">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>Logs</span>
+                    </a>
+                    <a href="#tickets" class="nav-item" data-tab="tickets">
+                        <i class="fa-solid fa-ticket"></i>
+                        <span>Tickets</span>
+                    </a>
+                    <a href="#rules" class="nav-item" data-tab="rules">
+                        <i class="fa-solid fa-gavel"></i>
+                        <span>Rules</span>
+                    </a>
+                    <a href="#suggestions" class="nav-item" data-tab="suggestions">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <span>Suggestions</span>
+                    </a>
+                    <a href="#apply" class="nav-item" data-tab="apply">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>Apply</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-pill">
+                    <span class="status-dot"></span>
+                    <span id="bot-status-text">Online</span>
+                </div>
+                <div class="language-selector">
+                    <i class="fa-solid fa-globe"></i>
+                    <select id="lang-select">
+                        <option value="en">US English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-wrapper">
+            <!-- TOP BAR PILLS -->
+            <header class="topbar">
+                <div class="topbar-pills">
+                    <div class="pill status-pill-top">
+                        <span class="pulse-dot"></span>
+                        <span id="top-status-text">Bot Online</span>
+                    </div>
+                    <div class="pill">
+                        <span class="pill-label">Ping:</span>
+                        <span class="pill-value" id="top-ping">42ms</span>
+                    </div>
+                    <div class="pill">
+                        <span class="pill-label">Uptime:</span>
+                        <span class="pill-value" id="top-uptime">0m</span>
+                    </div>
+                    <div class="pill">
+                        <span class="pill-label">Memory:</span>
+                        <span class="pill-value" id="top-memory">45.09 MB</span>
+                    </div>
+                </div>
+
+                <div class="topbar-actions">
+                    <a href="https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID_HERE&permissions=8&scope=bot%20applications.commands" target="_blank" class="invite-btn" id="invite-bot-btn">
+                        <i class="fa-brands fa-discord"></i> Invite Bot
+                    </a>
+                </div>
+            </header>
+
+            <!-- TAB CONTENTS -->
+            <div class="content-scroll">
+                
+                <!-- TAB 1: DASHBOARD (SCREENSHOT VIEW) -->
+                <section id="tab-dashboard" class="tab-pane active">
+                    <div class="dashboard-grid">
+                        
+                        <!-- LEFT 2-COL AREA -->
+                        <div class="primary-column">
+                            
+                            <!-- 🎙️ MULTI-BOT VOICE & SOUND STUDIO -->
+                            <div class="section-block voice-studio-card">
+                                <div class="section-header">
+                                    <div class="header-with-icon">
+                                        <div class="voice-pulse-icon">
+                                            <i class="fa-solid fa-tower-broadcast"></i>
+                                        </div>
+                                        <div>
+                                            <h3>Multi-Bot Voice & Sound Control Center</h3>
+                                            <span class="subtext">Live local dashboard to control all bots & audio in General Lounge</span>
+                                        </div>
+                                    </div>
+                                    <div class="header-badges">
+                                        <span class="badge live-badge" id="vc-network-badge"><i class="fa-solid fa-satellite-dish"></i> 5 Bots Live</span>
+                                    </div>
+                                </div>
+
+                                <!-- MASTER SOUND TOGGLE & QUICK ACTIONS BAR -->
+                                <div class="voice-master-panel">
+                                    <div class="sound-toggle-box">
+                                        <div class="sound-toggle-meta">
+                                            <span class="label-tiny">MASTER AUDIO SWITCH</span>
+                                            <div class="current-sound-display">
+                                                <span class="sound-name-label" id="active-sound-label">hmmmhmmm.mp3</span>
+                                                <span class="sound-status-pill active-pill" id="master-sound-status-pill">Playing</span>
+                                            </div>
+                                        </div>
+                                        <button id="btn-toggle-sound" class="btn-sound-toggle sound-on" onclick="toggleMasterSound()">
+                                            <div class="eq-bars">
+                                                <span></span><span></span><span></span><span></span>
+                                            </div>
+                                            <span id="btn-sound-toggle-text">SOUND ON</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="voice-actions-box">
+                                        <button type="button" class="btn-action" style="background: linear-gradient(135deg, #7c3aed, #db2777); color: #fff; font-weight: 600;" onclick="randomizeAllBotSoundsUI()">
+                                            <i class="fa-solid fa-shuffle"></i> 🎲 Shuffle All (Unique Sounds)
+                                        </button>
+                                        <button type="button" class="btn-action btn-secondary" id="btn-toggle-rotation" onclick="toggleAutoRotationUI()" title="When a track ends, bot picks another unique sound">
+                                            <i class="fa-solid fa-shuffle"></i> Auto-Shuffle: ON
+                                        </button>
+                                        <button type="button" class="btn-action btn-join-all" onclick="voiceAction('join-all')">
+                                            <i class="fa-solid fa-headset"></i> Connect All
+                                        </button>
+                                        <button type="button" class="btn-action btn-leave-all" onclick="voiceAction('leave-all')">
+                                            <i class="fa-solid fa-power-off"></i> Disconnect All
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- SOUND FOLDER MANAGER & AUDIO UPLOADER -->
+                                <div class="sound-folder-card">
+                                    <div class="folder-meta-left">
+                                        <div class="folder-icon-glow">
+                                            <i class="fa-solid fa-folder-open"></i>
+                                        </div>
+                                        <div class="folder-meta-text">
+                                            <h4>Sound Library: <code>/sounds</code> <span class="badge badge-purple" id="folder-sounds-count-badge" style="margin-left:8px;font-size:11px;"><i class="fa-solid fa-music"></i> 4 Sounds</span></h4>
+                                            <p>Save audio files into the <code>/sounds</code> folder or upload directly here to select for any individual bot</p>
+                                        </div>
+                                    </div>
+                                    <div class="folder-actions-right">
+                                        <input type="file" id="sound-upload-input" accept=".mp3,.wav,.ogg,.m4a,.aac,.flac" style="display:none;" onchange="handleSoundUpload(event)">
+                                        <button type="button" class="btn-action btn-upload-sound" onclick="document.getElementById('sound-upload-input').click()">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Sound (.mp3)
+                                        </button>
+                                        <button type="button" class="btn-secondary" onclick="fetchVoiceStatus(true)" title="Rescan /sounds folder">
+                                            <i class="fa-solid fa-arrows-rotate" id="folder-rescan-icon"></i> Rescan Folder
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- LIVE BOTS VOICE GRID -->
+                                <div class="bots-grid-wrapper">
+                                    <span class="label-tiny"><i class="fa-solid fa-users-gear"></i> INDIVIDUAL BOT VOICE CONTROLLERS</span>
+                                    <div class="bots-voice-grid" id="bots-voice-container">
+                                        <!-- Dynamically loaded from /api/voice/status -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- OVERVIEW STATS -->
+                            <div class="section-block">
+                                <div class="section-header">
+                                    <h3>Overview Stats</h3>
+                                    <span class="badge live-badge"><i class="fa-solid fa-arrows-rotate"></i> Live Data</span>
+                                </div>
+                                <div class="stats-row">
+                                    <div class="stat-card blue">
+                                        <div class="stat-top">
+                                            <div>
+                                                <span class="stat-title">Servers</span>
+                                                <h1 class="stat-number" id="stat-servers">1</h1>
+                                            </div>
+                                            <div class="stat-icon-wrapper">
+                                                <i class="fa-solid fa-server"></i>
+                                            </div>
+                                        </div>
+                                        <div class="stat-bottom">
+                                            <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 5% from last week</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="stat-card green">
+                                        <div class="stat-top">
+                                            <div>
+                                                <span class="stat-title">Users</span>
+                                                <h1 class="stat-number" id="stat-users">15</h1>
+                                            </div>
+                                            <div class="stat-icon-wrapper">
+                                                <i class="fa-solid fa-users"></i>
+                                            </div>
+                                        </div>
+                                        <div class="stat-bottom">
+                                            <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 12% from last month</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="stat-card purple">
+                                        <div class="stat-top">
+                                            <div>
+                                                <span class="stat-title">Commands</span>
+                                                <h1 class="stat-number" id="stat-commands">37</h1>
+                                            </div>
+                                            <div class="stat-icon-wrapper">
+                                                <i class="fa-solid fa-terminal"></i>
+                                            </div>
+                                        </div>
+                                        <div class="stat-bottom">
+                                            <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 8% from last day</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- MODULE STATUS -->
+                            <div class="section-block module-status-card">
+                                <div class="section-header">
+                                    <h3>Module Status</h3>
+                                    <a href="#settings" class="view-all-link" onclick="switchTab('settings')">View All</a>
+                                </div>
+                                <div class="modules-grid">
+                                    <div class="module-item">
+                                        <div class="module-left">
+                                            <div class="module-icon shield"><i class="fa-solid fa-shield"></i></div>
+                                            <div class="module-details">
+                                                <h4>Protection</h4>
+                                                <p id="mod-prot-text">5 active rules</p>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-circle-check checkmark"></i>
+                                    </div>
+
+                                    <div class="module-item">
+                                        <div class="module-left">
+                                            <div class="module-icon ticket"><i class="fa-solid fa-ticket"></i></div>
+                                            <div class="module-details">
+                                                <h4>Tickets</h4>
+                                                <p id="mod-tick-text">3 ticket types</p>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-circle-check checkmark"></i>
+                                    </div>
+
+                                    <div class="module-item">
+                                        <div class="module-left">
+                                            <div class="module-icon apps"><i class="fa-solid fa-file-lines"></i></div>
+                                            <div class="module-details">
+                                                <h4>Applications</h4>
+                                                <p id="mod-app-text">2 active positions</p>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-circle-check checkmark"></i>
+                                    </div>
+
+                                    <div class="module-item">
+                                        <div class="module-left">
+                                            <div class="module-icon rules"><i class="fa-solid fa-gavel"></i></div>
+                                            <div class="module-details">
+                                                <h4>Rules</h4>
+                                                <p id="mod-rules-text">5 rule sections</p>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-circle-check checkmark"></i>
+                                    </div>
+
+                                    <div class="module-item">
+                                        <div class="module-left">
+                                            <div class="module-icon gift"><i class="fa-solid fa-gift"></i></div>
+                                            <div class="module-details">
+                                                <h4>Giveaways</h4>
+                                                <p id="mod-give-text">Active</p>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-circle-check checkmark"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SUPPORT BLOCK -->
+                            <div class="section-block">
+                                <div class="section-header">
+                                    <h3>Support</h3>
+                                </div>
+                                <div class="support-grid">
+                                    <a href="https://discord.gg/example" target="_blank" class="support-card">
+                                        <div class="support-icon discord"><i class="fa-brands fa-discord"></i></div>
+                                        <div class="support-info">
+                                            <h4>Join Our Discord</h4>
+                                            <p>Get help from our community</p>
+                                        </div>
+                                    </a>
+
+                                    <a href="https://github.com/example/codex-bot" target="_blank" class="support-card">
+                                        <div class="support-icon github"><i class="fa-brands fa-github"></i></div>
+                                        <div class="support-info">
+                                            <h4>GitHub Issues</h4>
+                                            <p>Report bugs and suggestions</p>
+                                        </div>
+                                    </a>
+
+                                    <a href="https://youtube.com/@example" target="_blank" class="support-card">
+                                        <div class="support-icon youtube"><i class="fa-brands fa-youtube"></i></div>
+                                        <div class="support-info">
+                                            <h4>YouTube Tutorials</h4>
+                                            <p>Watch guides and tutorials to learn more</p>
+                                        </div>
+                                    </a>
+
+                                    <a href="https://ko-fi.com/example" target="_blank" class="support-card">
+                                        <div class="support-icon donate"><i class="fa-solid fa-sack-dollar"></i></div>
+                                        <div class="support-info">
+                                            <h4>Donate</h4>
+                                            <p>Support the project by contributing</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT ASIDE COLUMN -->
+                        <div class="secondary-column">
+                            
+                            <!-- BOT HEALTH -->
+                            <div class="side-panel">
+                                <h3>Bot Health</h3>
+                                
+                                <div class="health-metric">
+                                    <div class="metric-top">
+                                        <span>Ping</span>
+                                        <span id="health-ping-val">42 ms</span>
+                                    </div>
+                                    <div class="progress-track">
+                                        <div class="progress-bar green" id="health-ping-bar" style="width: 25%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="health-metric">
+                                    <div class="metric-top">
+                                        <span>Memory Usage</span>
+                                        <span id="health-mem-val">45.09 MB</span>
+                                    </div>
+                                    <div class="progress-track">
+                                        <div class="progress-bar cyan" id="health-mem-bar" style="width: 38%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="health-metric">
+                                    <div class="metric-top">
+                                        <span>Uptime</span>
+                                        <span id="health-up-val">0m</span>
+                                    </div>
+                                    <div class="progress-track">
+                                        <div class="progress-bar blue" id="health-up-bar" style="width: 15%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="health-metric">
+                                    <div class="metric-top">
+                                        <span>Protection Status</span>
+                                        <span id="health-prot-val">5 active</span>
+                                    </div>
+                                    <div class="progress-track">
+                                        <div class="progress-bar purple" id="health-prot-bar" style="width: 100%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- QUICK ACTIONS -->
+                            <div class="side-panel">
+                                <h3>Quick Actions</h3>
+                                <div class="quick-actions-grid">
+                                    <button class="qa-btn qa-blue" onclick="triggerQuickAction('toggle-protection')">
+                                        <i class="fa-solid fa-shield"></i>
+                                        <span>Protection</span>
+                                    </button>
+                                    <button class="qa-btn qa-green" onclick="triggerQuickAction('toggle-tickets')">
+                                        <i class="fa-solid fa-ticket"></i>
+                                        <span>Tickets</span>
+                                    </button>
+                                    <button class="qa-btn qa-purple" onclick="triggerQuickAction('toggle-apply')">
+                                        <i class="fa-solid fa-file-signature"></i>
+                                        <span>Apply</span>
+                                    </button>
+                                    <button class="qa-btn qa-orange" onclick="switchTab('general-cmds')">
+                                        <i class="fa-solid fa-terminal"></i>
+                                        <span>Commands</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- RECENT ACTIVITY -->
+                            <div class="side-panel">
+                                <h3>Recent Activity</h3>
+                                <div class="activity-timeline" id="activity-timeline-list">
+                                    <div class="activity-item">
+                                        <div class="activity-dot blue"></div>
+                                        <div class="activity-content">
+                                            <h4>System Initialized</h4>
+                                            <p>All systems are up and running</p>
+                                            <span class="activity-time">Just now</span>
+                                        </div>
+                                    </div>
+                                    <div class="activity-item">
+                                        <div class="activity-dot green"></div>
+                                        <div class="activity-content">
+                                            <h4>API Connected</h4>
+                                            <p>Gateway connection established</p>
+                                            <span class="activity-time">10 minutes ago</span>
+                                        </div>
+                                    </div>
+                                    <div class="activity-item">
+                                        <div class="activity-dot purple"></div>
+                                        <div class="activity-content">
+                                            <h4>Protection Active</h4>
+                                            <p>Server security systems enabled</p>
+                                            <span class="activity-time">25 minutes ago</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- TAB 2: BOT SETTINGS -->
+                <section id="tab-settings" class="tab-pane">
+                    <div class="settings-container">
+                        <div class="settings-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-sliders"></i> General Bot Configuration</h3>
+                                <p>Manage bot behavior, prefix, and branding</p>
+                            </div>
+                            <form id="general-settings-form" class="settings-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="setting-prefix">Command Prefix</label>
+                                        <input type="text" id="setting-prefix" value="!" class="form-input" maxlength="3">
+                                        <span class="form-hint">Used for legacy text commands (e.g. !ping)</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="setting-color">Embed Theme Color</label>
+                                        <input type="color" id="setting-color" value="#5865F2" class="form-color-picker">
+                                        <span class="form-hint">Applied to all bot embeds</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="setting-log-channel">Default Logs Channel</label>
+                                        <input type="text" id="setting-log-channel" value="bot-logs" class="form-input">
+                                        <span class="form-hint">Discord channel for audit events</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="setting-autorole">Auto-Role on Join</label>
+                                        <input type="text" id="setting-autorole" value="Member" class="form-input">
+                                        <span class="form-hint">Assigned automatically to new members</span>
+                                    </div>
+                                </div>
+
+                                <div class="divider"></div>
+
+                                <h4><i class="fa-solid fa-shield"></i> Security & Protection Rules</h4>
+                                <div class="toggle-grid">
+                                    <div class="toggle-card">
+                                        <div class="toggle-info">
+                                            <strong>Anti-Spam Filter</strong>
+                                            <span>Blocks repeated messages</span>
+                                        </div>
+                                        <label class="switch">
+                                            <input type="checkbox" id="prot-antispam" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="toggle-card">
+                                        <div class="toggle-info">
+                                            <strong>Anti-Invites Filter</strong>
+                                            <span>Deletes unauthorized Discord invite links</span>
+                                        </div>
+                                        <label class="switch">
+                                            <input type="checkbox" id="prot-antiinvites" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="toggle-card">
+                                        <div class="toggle-info">
+                                            <strong>Anti-Mass Mention</strong>
+                                            <span>Blocks pinging >5 users at once</span>
+                                        </div>
+                                        <label class="switch">
+                                            <input type="checkbox" id="prot-antimention" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="toggle-card">
+                                        <div class="toggle-info">
+                                            <strong>Bad Words & Scam Shield</strong>
+                                            <span>Filters harmful links and words</span>
+                                        </div>
+                                        <label class="switch">
+                                            <input type="checkbox" id="prot-badwords" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Configuration</button>
+                                    <span id="save-feedback" class="feedback-msg"></span>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 3: GENERAL COMMANDS -->
+                <section id="tab-general-cmds" class="tab-pane">
+                    <div class="commands-container">
+                        <div class="commands-header">
+                            <div>
+                                <h3>General Commands</h3>
+                                <p>Interactive slash commands available to all server members</p>
+                            </div>
+                        </div>
+
+                        <div class="commands-table-wrapper">
+                            <table class="commands-table">
+                                <thead>
+                                    <tr>
+                                        <th>Command</th>
+                                        <th>Description</th>
+                                        <th>Arguments</th>
+                                        <th>Permission</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>/ping</code></td>
+                                        <td>Check bot latency and gateway ping</td>
+                                        <td><em>None</em></td>
+                                        <td><span class="badge badge-public">Everyone</span></td>
+                                        <td><span class="badge badge-active">Active</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/botinfo</code></td>
+                                        <td>Display bot statistics, health, and system info</td>
+                                        <td><em>None</em></td>
+                                        <td><span class="badge badge-public">Everyone</span></td>
+                                        <td><span class="badge badge-active">Active</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/serverinfo</code></td>
+                                        <td>Displays information about the current Discord server</td>
+                                        <td><em>None</em></td>
+                                        <td><span class="badge badge-public">Everyone</span></td>
+                                        <td><span class="badge badge-active">Active</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/userinfo</code></td>
+                                        <td>Get details about a server member</td>
+                                        <td><code>[target]</code></td>
+                                        <td><span class="badge badge-public">Everyone</span></td>
+                                        <td><span class="badge badge-active">Active</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/help</code></td>
+                                        <td>View list of all available commands and modules</td>
+                                        <td><em>None</em></td>
+                                        <td><span class="badge badge-public">Everyone</span></td>
+                                        <td><span class="badge badge-active">Active</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/suggest</code></td>
+                                        <td>Submit a server suggestion with upvote/downvote buttons</td>
+                                        <td><code>idea</code></td>
+                                        <td><span class="badge badge-public">Everyone</span></td>
+                                        <td><span class="badge badge-active">Active</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 4: MODERATION COMMANDS -->
+                <section id="tab-mod-cmds" class="tab-pane">
+                    <div class="commands-container">
+                        <div class="commands-header">
+                            <div>
+                                <h3>Moderation Commands</h3>
+                                <p>Staff & Admin moderation tools with automated audit logging</p>
+                            </div>
+                        </div>
+
+                        <div class="commands-table-wrapper">
+                            <table class="commands-table">
+                                <thead>
+                                    <tr>
+                                        <th>Command</th>
+                                        <th>Description</th>
+                                        <th>Arguments</th>
+                                        <th>Permission</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>/ban</code></td>
+                                        <td>Permanently ban a member from the server</td>
+                                        <td><code>target</code>, <code>[reason]</code></td>
+                                        <td><span class="badge badge-admin">Ban Members</span></td>
+                                        <td><span class="badge badge-active">Ready</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/kick</code></td>
+                                        <td>Kick a user from the server</td>
+                                        <td><code>target</code>, <code>[reason]</code></td>
+                                        <td><span class="badge badge-admin">Kick Members</span></td>
+                                        <td><span class="badge badge-active">Ready</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/mute</code></td>
+                                        <td>Timeout/mute a member for a given duration</td>
+                                        <td><code>target</code>, <code>duration</code>, <code>[reason]</code></td>
+                                        <td><span class="badge badge-mod">Moderate Members</span></td>
+                                        <td><span class="badge badge-active">Ready</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/unmute</code></td>
+                                        <td>Remove timeout restriction from a user</td>
+                                        <td><code>target</code></td>
+                                        <td><span class="badge badge-mod">Moderate Members</span></td>
+                                        <td><span class="badge badge-active">Ready</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/warn</code></td>
+                                        <td>Issue a formal warning to a server member</td>
+                                        <td><code>target</code>, <code>reason</code></td>
+                                        <td><span class="badge badge-mod">Moderate Members</span></td>
+                                        <td><span class="badge badge-active">Ready</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/clear</code></td>
+                                        <td>Bulk delete 1 to 100 messages in current channel</td>
+                                        <td><code>amount</code></td>
+                                        <td><span class="badge badge-mod">Manage Messages</span></td>
+                                        <td><span class="badge badge-active">Ready</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/slowmode</code></td>
+                                        <td>Set slowmode rate limit per user</td>
+                                        <td><code>seconds</code></td>
+                                        <td><span class="badge badge-mod">Manage Channels</span></td>
+                                        <td><span class="badge badge-active">Ready</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 5: TICKETS -->
+                <section id="tab-tickets" class="tab-pane">
+                    <div class="settings-container">
+                        <div class="settings-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-ticket"></i> Support Ticket System</h3>
+                                <p>Configure automatic private ticket channels and transcripts</p>
+                            </div>
+                            <div class="ticket-config-box">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Ticket Category Name</label>
+                                        <input type="text" class="form-input" value="Support Tickets" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Support Staff Role</label>
+                                        <input type="text" class="form-input" value="Support Team" readonly>
+                                    </div>
+                                </div>
+                                <p class="form-hint" style="margin-top: 10px;">To post the ticket creation panel into your Discord server channel, run <code>/ticket-panel</code>.</p>
+                                <div style="margin-top: 15px;">
+                                    <h4>Active Ticket Categories</h4>
+                                    <div class="ticket-pills">
+                                        <span class="badge badge-public">🎫 General Support</span>
+                                        <span class="badge badge-public">💳 Billing & Purchases</span>
+                                        <span class="badge badge-public">🚨 Report Member / Bug</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 6: RULES -->
+                <section id="tab-rules" class="tab-pane">
+                    <div class="settings-container">
+                        <div class="settings-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-gavel"></i> Server Rules</h3>
+                                <p>Custom rules published through the <code>/rules</code> slash command</p>
+                            </div>
+                            <div class="rules-editor" id="rules-container">
+                                <div class="rule-entry">1. Be respectful to all community members and staff.</div>
+                                <div class="rule-entry">2. No harassment, hate speech, or offensive behavior.</div>
+                                <div class="rule-entry">3. No unsolicited direct messages or advertisement.</div>
+                                <div class="rule-entry">4. Keep discussions within designated channels.</div>
+                                <div class="rule-entry">5. Follow Discord Community Guidelines and Terms of Service.</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 7: DOCUMENTATION -->
+                <section id="tab-docs" class="tab-pane">
+                    <div class="settings-container">
+                        <div class="settings-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-book"></i> Setup & Configuration Guide</h3>
+                                <p>Step-by-step instructions to connect your bot with Discord</p>
+                            </div>
+                            <div class="doc-body">
+                                <h4>Step 1: Discord Developer Portal</h4>
+                                <ol class="doc-steps">
+                                    <li>Visit the <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a>.</li>
+                                    <li>Click <strong>New Application</strong> and give it a name (e.g., <code>CodeX Bot</code>).</li>
+                                    <li>Go to the <strong>Bot</strong> tab on the left and click <strong>Add Bot</strong> (or Reset Token to reveal your token).</li>
+                                    <li>Enable all 3 <strong>Privileged Gateway Intents</strong>:
+                                        <ul>
+                                            <li>Presence Intent</li>
+                                            <li>Server Members Intent</li>
+                                            <li>Message Content Intent</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+
+                                <h4>Step 2: Configure <code>config.js</code></h4>
+                                <p>Open <code>config.js</code> in your project directory and replace the placeholders:</p>
+                                <pre><code>module.exports = {
+    token: "YOUR_COPIED_BOT_TOKEN",
+    clientId: "YOUR_APPLICATION_CLIENT_ID",
+    dashboard: { port: 3001 }
+};</code></pre>
+
+                                <h4>Step 3: Invite the Bot</h4>
+                                <p>Go to <strong>OAuth2 > URL Generator</strong>, select scopes <code>bot</code> and <code>applications.commands</code>, choose Administrator permissions, and open the generated invite link.</p>
+
+                                <h4>Step 4: Run the Bot</h4>
+                                <pre><code>npm run start</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                <!-- TAB 8: DEDICATED VOICE CONTROL VIEW -->
+                <section id="tab-voice-control" class="tab-pane">
+                    <div class="page-title-row">
+                        <div>
+                            <h2>Voice & Sound Studio</h2>
+                            <p class="subtitle">Complete real-time control over all bots in voice channels</p>
+                        </div>
+                        <div>
+                            <button class="btn-action btn-join-all" onclick="voiceAction('join-all')">
+                                <i class="fa-solid fa-headset"></i> Connect All Bots
+                            </button>
+                        </div>
+                    </div>
+                    <div id="dedicated-voice-clone"></div>
+                </section>
+
+                <!-- TAB: DIRECT MESSENGER -->
+                <section id="tab-direct-message" class="tab-pane">
+                    <div class="page-title-row">
+                        <div>
+                            <h2>Direct Messenger</h2>
+                            <p class="subtitle">Select Discord members and deliver custom direct messages or administrative notices</p>
+                        </div>
+                        <div class="dm-header-actions">
+                            <button class="btn-action" onclick="loadDiscordMembers(true)" title="Refresh member list">
+                                <i class="fa-solid fa-arrows-rotate" id="dm-refresh-icon"></i> Refresh Members
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="dm-container-layout">
+                        <!-- LEFT: COMPOSE PANEL -->
+                        <div class="card dm-compose-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fa-solid fa-envelope-open-text"></i>
+                                    <h3>Compose Custom Message</h3>
+                                </div>
+                                <span class="badge badge-purple" id="dm-member-count-badge">Loading members...</span>
+                            </div>
+
+                            <form id="dm-form" onsubmit="handleSendDM(event)">
+                                <!-- Member Selection -->
+                                <div class="form-group">
+                                    <div class="form-label-row">
+                                        <label for="dm-user-select">Select Member from Server</label>
+                                        <button type="button" class="btn-link" id="toggle-manual-id-btn" onclick="toggleManualIdMode()">
+                                            <i class="fa-solid fa-keyboard"></i> Or enter User ID manually
+                                        </button>
+                                    </div>
+                                    <div id="dm-select-wrapper">
+                                        <div class="custom-select-container">
+                                            <select id="dm-user-select" class="form-control" onchange="onMemberSelected()">
+                                                <option value="" disabled selected>-- Select a member --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="dm-manual-wrapper" style="display: none;">
+                                        <input type="text" id="dm-manual-id" class="form-control" placeholder="Enter Discord User ID (e.g. 1537012465043382304)" oninput="updateLivePreview()">
+                                    </div>
+                                </div>
+
+                                <!-- Selected Member Info Pill -->
+                                <div id="selected-member-pill" class="selected-member-preview" style="display: none;">
+                                    <img id="sel-member-avatar" src="" alt="Avatar" class="member-avatar-small">
+                                    <div class="sel-member-meta">
+                                        <strong id="sel-member-name">Username</strong>
+                                        <span id="sel-member-id">ID: 000000000000000000</span>
+                                    </div>
+                                    <span class="sel-member-guild" id="sel-member-guild">Server</span>
+                                </div>
+
+                                <!-- Message Format Toggle -->
+                                <div class="form-group">
+                                    <label>Message Format</label>
+                                    <div class="format-toggle-group">
+                                        <button type="button" class="format-btn active" id="btn-format-text" onclick="setMessageFormat('text')">
+                                            <i class="fa-solid fa-align-left"></i> Standard Text
+                                        </button>
+                                        <button type="button" class="format-btn" id="btn-format-embed" onclick="setMessageFormat('embed')">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i> Rich Embed Notice
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Embed Specific Fields -->
+                                <div id="embed-fields-container" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="dm-embed-title">Embed Title (Optional)</label>
+                                        <input type="text" id="dm-embed-title" class="form-control" placeholder="e.g. Server Announcement, Official Notice, Warning" oninput="updateLivePreview()">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Embed Accent Color</label>
+                                        <div class="color-picker-row">
+                                            <button type="button" class="color-pill active" style="--c: #5865F2" data-color="#5865F2" onclick="setEmbedColor('#5865F2', this)" title="Discord Blurple"></button>
+                                            <button type="button" class="color-pill" style="--c: #10b981" data-color="#10b981" onclick="setEmbedColor('#10b981', this)" title="Emerald Green"></button>
+                                            <button type="button" class="color-pill" style="--c: #f59e0b" data-color="#f59e0b" onclick="setEmbedColor('#f59e0b', this)" title="Amber Warning"></button>
+                                            <button type="button" class="color-pill" style="--c: #ef4444" data-color="#ef4444" onclick="setEmbedColor('#ef4444', this)" title="Crimson Red"></button>
+                                            <button type="button" class="color-pill" style="--c: #8b5cf6" data-color="#8b5cf6" onclick="setEmbedColor('#8b5cf6', this)" title="Royal Purple"></button>
+                                            <input type="color" id="dm-custom-color" value="#5865F2" class="custom-color-input" onchange="setEmbedColor(this.value, this)" title="Custom Color">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Preset Templates -->
+                                <div class="form-group">
+                                    <label>Quick Message Presets</label>
+                                    <div class="preset-chips-row">
+                                        <button type="button" class="preset-chip" onclick="applyPreset('notice')">
+                                            <i class="fa-solid fa-bullhorn"></i> Server Notice
+                                        </button>
+                                        <button type="button" class="preset-chip" onclick="applyPreset('warning')">
+                                            <i class="fa-solid fa-triangle-exclamation"></i> Friendly Warning
+                                        </button>
+                                        <button type="button" class="preset-chip" onclick="applyPreset('ticket')">
+                                            <i class="fa-solid fa-ticket"></i> Ticket Update
+                                        </button>
+                                        <button type="button" class="preset-chip" onclick="applyPreset('welcome')">
+                                            <i class="fa-solid fa-hand-wave"></i> Welcome
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Message Body -->
+                                <div class="form-group">
+                                    <div class="form-label-row">
+                                        <label for="dm-message-text">Message Content</label>
+                                        <span class="char-count" id="dm-char-count">0 / 2000</span>
+                                    </div>
+                                    <textarea id="dm-message-text" rows="5" class="form-control" placeholder="Type your custom direct message here..." maxlength="2000" oninput="updateLivePreview()" required></textarea>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="form-actions-row">
+                                    <button type="submit" class="btn-action btn-send-dm" id="btn-submit-dm">
+                                        <i class="fa-solid fa-paper-plane"></i> Send Direct Message
+                                    </button>
+                                    <button type="button" class="btn-secondary" onclick="resetDMForm()">
+                                        <i class="fa-solid fa-rotate-left"></i> Reset
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- RIGHT: LIVE PREVIEW & HISTORY -->
+                        <div class="dm-side-layout">
+                            <!-- Live Discord Preview -->
+                            <div class="card dm-preview-card">
+                                <div class="card-header">
+                                    <div class="card-title">
+                                        <i class="fa-brands fa-discord"></i>
+                                        <h3>Live Discord DM Preview</h3>
+                                    </div>
+                                    <span class="status-badge live-badge"><span class="pulse-dot"></span> Live</span>
+                                </div>
+
+                                <div class="discord-preview-chat">
+                                    <div class="discord-msg-row">
+                                        <img id="preview-bot-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" class="discord-avatar" alt="Bot Avatar">
+                                        <div class="discord-msg-content">
+                                            <div class="discord-msg-header">
+                                                <span class="discord-author" id="preview-bot-name">CodeX Bot</span>
+                                                <span class="discord-bot-tag">BOT</span>
+                                                <span class="discord-timestamp">Today at <span id="preview-timestamp">12:00 PM</span></span>
+                                            </div>
+
+                                            <!-- Plain text view -->
+                                            <div id="preview-text-body" class="discord-text-body">
+                                                Your message will appear here in real-time as you type...
+                                            </div>
+
+                                            <!-- Embed view -->
+                                            <div id="preview-embed-body" class="discord-embed-card" style="display: none; border-left-color: #5865F2;">
+                                                <div class="discord-embed-title" id="preview-embed-title">Notice Title</div>
+                                                <div class="discord-embed-description" id="preview-embed-desc">Your embed description will appear here...</div>
+                                                <div class="discord-embed-footer">
+                                                    <img id="preview-footer-icon" src="https://cdn.discordapp.com/embed/avatars/0.png" class="footer-icon" alt="">
+                                                    <span>Sent via CodeX Bot Admin Dashboard • Today at <span id="preview-footer-time">12:00 PM</span></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sent Message History -->
+                            <div class="card dm-history-card">
+                                <div class="card-header">
+                                    <div class="card-title">
+                                        <i class="fa-solid fa-clock-rotate-left"></i>
+                                        <h3>Recently Sent Notices</h3>
+                                    </div>
+                                    <button class="btn-icon" onclick="loadMessageHistory()" title="Refresh History">
+                                        <i class="fa-solid fa-arrows-rotate"></i>
+                                    </button>
+                                </div>
+                                <div class="dm-history-list" id="dm-history-list">
+                                    <div class="dm-history-empty">
+                                        <i class="fa-regular fa-paper-plane"></i>
+                                        <p>No direct messages sent yet in this session.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

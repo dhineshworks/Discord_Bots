@@ -1,0 +1,159 @@
+{
+  "prefix": "!",
+  "themeColor": "#ff0000",
+  "language": "en",
+  "modules": {
+    "protection": {
+      "enabled": false,
+      "antiSpam": true,
+      "antiInvites": true,
+      "antiCaps": true,
+      "antiMassMention": true,
+      "badWordsFilter": true,
+      "maxMentions": 5
+    },
+    "tickets": {
+      "enabled": false,
+      "ticketCategory": "Support Tickets",
+      "supportRole": "Support Team",
+      "transcriptChannel": "ticket-transcripts",
+      "ticketTypes": [
+        {
+          "id": "general",
+          "name": "General Support",
+          "emoji": "🎫"
+        },
+        {
+          "id": "billing",
+          "name": "Billing & Purchases",
+          "emoji": "💳"
+        },
+        {
+          "id": "report",
+          "name": "Report Member / Bug",
+          "emoji": "🚨"
+        }
+      ]
+    },
+    "applications": {
+      "enabled": false,
+      "positions": [
+        {
+          "title": "Community Moderator",
+          "open": true
+        },
+        {
+          "title": "Discord Event Manager",
+          "open": true
+        }
+      ]
+    },
+    "rules": {
+      "enabled": true,
+      "rulesList": [
+        "1. Be respectful to all community members and staff.",
+        "2. No harassment, hate speech, or offensive behavior.",
+        "3. No unsolicited direct messages or advertisement.",
+        "4. Keep discussions within designated channels.",
+        "5. Follow Discord Community Guidelines and Terms of Service."
+      ]
+    },
+    "giveaways": {
+      "enabled": true,
+      "defaultDuration": "24h",
+      "reactionEmoji": "🎉"
+    },
+    "autorole": {
+      "enabled": true,
+      "roleName": "Member"
+    },
+    "logs": {
+      "enabled": true,
+      "channel": "bot-logs",
+      "logJoins": true,
+      "logLeaves": true,
+      "logModActions": true,
+      "logMessages": true
+    },
+    "suggestions": {
+      "enabled": true,
+      "channel": "suggestions"
+    }
+  },
+  "stats": {
+    "commandsExecuted": 37,
+    "lastKnownServers": 1,
+    "lastKnownUsers": 20
+  },
+  "recentActivity": [
+    {
+      "title": "Applications Toggled",
+      "description": "Staff applications status updated",
+      "time": "Just now",
+      "type": "info"
+    },
+    {
+      "title": "Protection Disabled",
+      "description": "Security filters updated via Quick Actions",
+      "time": "Just now",
+      "type": "warning"
+    },
+    {
+      "title": "Protection Enabled",
+      "description": "Security filters updated via Quick Actions",
+      "time": "Just now",
+      "type": "purple"
+    },
+    {
+      "title": "Protection Disabled",
+      "description": "Security filters updated via Quick Actions",
+      "time": "Just now",
+      "type": "warning"
+    },
+    {
+      "title": "Tickets Disabled",
+      "description": "Ticket module status switched",
+      "time": "Just now",
+      "type": "success"
+    },
+    {
+      "title": "Tickets Enabled",
+      "description": "Ticket module status switched",
+      "time": "Just now",
+      "type": "success"
+    },
+    {
+      "title": "Tickets Disabled",
+      "description": "Ticket module status switched",
+      "time": "Just now",
+      "type": "success"
+    },
+    {
+      "title": "Tickets Enabled",
+      "description": "Ticket module status switched",
+      "time": "Just now",
+      "type": "success"
+    },
+    {
+      "title": "Tickets Disabled",
+      "description": "Ticket module status switched",
+      "time": "Just now",
+      "type": "success"
+    },
+    {
+      "title": "Tickets Enabled",
+      "description": "Ticket module status switched",
+      "time": "Just now",
+      "type": "success"
+    }
+  ],
+  "botAudioAssignments": {
+    "1460709989604655134": "core-sound-effect",
+    "1554049771092836442": "athu-avalotha",
+    "1554049009319018526": "naa-poren",
+    "1554049432436084787": "ommala-mmmmm",
+    "1554049545636282439": "siragadippom-naango"
+  },
+  "randomRotation": true,
+  "masterSoundPreset": "comedy-punda-kaatriya"
+}

@@ -1,0 +1,5 @@
+node_modules
+.git
+.env
+run-24-7.bat
+*.log
