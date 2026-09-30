@@ -255,39 +255,5 @@ module.exports = [
 
             await interaction.reply({ embeds: [embed] });
         }
-    },
-    {
-        data: new SlashCommandBuilder()
-            .setName('testwelcome')
-            .setDescription('Preview the custom welcome banner card and message in this channel')
-            .addUserOption(opt =>
-                opt.setName('member')
-                    .setDescription('Simulate welcome for a specific member (defaults to you)')
-                    .setRequired(false)
-            ),
-        category: 'General',
-        async execute(interaction) {
-            await interaction.deferReply();
-            const { generateWelcomeCard, getOrdinal } = require('../welcome-card.js');
-            const { AttachmentBuilder } = require('discord.js');
-            const targetUser = interaction.options.getUser('member') || interaction.user;
-            const targetMember = interaction.guild.members.cache.get(targetUser.id) || interaction.member;
-
-            try {
-                const cardBuffer = await generateWelcomeCard(targetMember);
-                const attachment = new AttachmentBuilder(cardBuffer, { name: 'welcome.png' });
-                const ordinal = getOrdinal(interaction.guild.memberCount);
-
-                const messageContent = `Welcome <@${targetMember.id}> to ${interaction.guild.name}  You are the ${ordinal} member!`;
-
-                await interaction.editReply({
-                    content: messageContent,
-                    files: [attachment]
-                });
-            } catch (err) {
-                console.error('Error generating test welcome card:', err);
-                await interaction.editReply({ content: `❌ Error generating welcome card: ${err.message}` });
-            }
-        }
     }
 ];
