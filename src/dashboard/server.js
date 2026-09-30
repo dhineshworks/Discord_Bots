@@ -7,7 +7,7 @@ const { EmbedBuilder } = require('discord.js');
 
 function startDashboard(clientProvider, config) {
     const app = express();
-    const port = config.dashboard.port || 3001;
+    const port = process.env.PORT || (config && config.dashboard && config.dashboard.port) || 3001;
     const settingsPath = path.join(__dirname, '../../settings.json');
 
     function getClient() {
@@ -708,9 +708,9 @@ function startDashboard(clientProvider, config) {
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     });
 
-    const server = app.listen(port, () => {
+    const server = app.listen(port, '0.0.0.0', () => {
         console.log(`\n=================================================`);
-        console.log(`🚀 CodeX Bot Dashboard running on: http://localhost:${port}`);
+        console.log(`🚀 CodeX Bot Dashboard running on port: ${port}`);
         console.log(`=================================================\n`);
     });
 

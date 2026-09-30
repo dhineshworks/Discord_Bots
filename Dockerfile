@@ -1,28 +1,21 @@
 FROM node:20-bookworm-slim
 
-# Install system tools and ffmpeg for audio support
+# Install ffmpeg for voice playback
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    python3 \
-    make \
-    g++ \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy package files
+# Copy dependency manifests
 COPY package*.json ./
 
 # Install production dependencies
 RUN npm install --omit=dev
 
-# Copy app files and audio assets
+# Copy all project files
 COPY . .
 
-# Expose web dashboard port
-EXPOSE 3001
-
-ENV PORT=3001
 ENV NODE_ENV=production
 
 # Start bot and dashboard

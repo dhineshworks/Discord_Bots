@@ -83,7 +83,7 @@
   "stats": {
     "commandsExecuted": 37,
     "lastKnownServers": 1,
-    "lastKnownUsers": 20
+    "lastKnownUsers": 22
   },
   "recentActivity": [
     {
@@ -148,11 +148,11 @@
     }
   ],
   "botAudioAssignments": {
-    "1460709989604655134": "core-sound-effect",
+    "1460709989604655134": "siragadippom-naango",
     "1554049771092836442": "athu-avalotha",
-    "1554049009319018526": "naa-poren",
+    "1554049009319018526": "dei-engada-irukinga-tamil",
     "1554049432436084787": "ommala-mmmmm",
-    "1554049545636282439": "siragadippom-naango"
+    "1554049545636282439": "comedy-punda-kaatriya"
   },
   "randomRotation": true,
   "masterSoundPreset": "comedy-punda-kaatriya"
