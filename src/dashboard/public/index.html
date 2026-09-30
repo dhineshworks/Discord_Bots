@@ -31,11 +31,6 @@
                         <i class="fa-solid fa-house"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="#music-player" class="nav-item" data-tab="music-player">
-                        <i class="fa-solid fa-music"></i>
-                        <span>Music Player</span>
-                        <span class="badge-mini" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 10px; padding: 2px 6px; border-radius: 6px; margin-left: auto;">NEW</span>
-                    </a>
                     <a href="#direct-message" class="nav-item" data-tab="direct-message">
                         <i class="fa-solid fa-paper-plane"></i>
                         <span>Direct Messenger</span>
@@ -492,103 +487,6 @@
                                 </div>
                             </div>
 
-                        </div>
-
-                    </div>
-                </section>
- 
-                <!-- TAB: MUSIC PLAYER & QUEUE STUDIO -->
-                <section id="tab-music-player" class="tab-pane">
-                    <div class="music-player-container">
-                        
-                        <!-- NOW PLAYING HERO CARD -->
-                        <div class="music-hero-card">
-                            <div class="music-track-display">
-                                <div class="music-album-art">
-                                    <img id="music-np-cover" src="https://assets.stickpng.com/images/580b57fcd9996e24bc43c537.png" alt="Track Cover" />
-                                    <div class="music-eq-animation" id="music-eq-bars" style="display: none;">
-                                        <span></span><span></span><span></span><span></span>
-                                    </div>
-                                </div>
-                                <div class="music-track-meta">
-                                    <div class="music-status-pill" id="music-status-pill">
-                                        <span class="dot"></span>
-                                        <span id="music-status-text">NO MUSIC PLAYING</span>
-                                    </div>
-                                    <h2 id="music-np-title">Nothing Playing Right Now</h2>
-                                    <p id="music-np-artist">Choose a song below or type /play in Discord</p>
-                                    
-                                    <!-- PROGRESS BAR -->
-                                    <div class="music-progress-wrapper">
-                                        <div class="music-progress-bar">
-                                            <div class="music-progress-fill" id="music-progress-fill" style="width: 0%"></div>
-                                        </div>
-                                        <div class="music-timestamps">
-                                            <span id="music-np-current">00:00</span>
-                                            <span id="music-np-total">00:00</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- INTERACTIVE CONTROLS -->
-                                    <div class="music-action-controls">
-                                        <button class="music-ctrl-btn" id="mbtn-shuffle" title="Shuffle Queue" onclick="dashboardMusicControl('shuffle')">
-                                            <i class="fa-solid fa-shuffle"></i>
-                                        </button>
-                                        <button class="music-ctrl-btn primary" id="mbtn-playpause" title="Play / Pause" onclick="dashboardMusicTogglePlay()">
-                                            <i class="fa-solid fa-play" id="mbtn-playpause-icon"></i>
-                                        </button>
-                                        <button class="music-ctrl-btn" id="mbtn-skip" title="Skip Track" onclick="dashboardMusicControl('skip')">
-                                            <i class="fa-solid fa-forward-step"></i>
-                                        </button>
-                                        <button class="music-ctrl-btn danger" id="mbtn-stop" title="Stop & Disconnect" onclick="dashboardMusicControl('stop')">
-                                            <i class="fa-solid fa-stop"></i>
-                                        </button>
-                                        
-                                        <!-- VOLUME SLIDER -->
-                                        <div class="music-volume-control">
-                                            <i class="fa-solid fa-volume-high"></i>
-                                            <input type="range" id="music-vol-slider" min="1" max="150" value="100" onchange="dashboardMusicSetVolume(this.value)">
-                                            <span id="music-vol-val">100%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SEARCH & QUICK PLAY -->
-                        <div class="music-search-card">
-                            <div class="section-header">
-                                <div class="header-with-icon">
-                                    <i class="fa-solid fa-magnifying-glass"></i>
-                                    <div>
-                                        <h3>Search & Play Anywhere</h3>
-                                        <span class="subtext">Play from SoundCloud, Spotify, or any audio stream instantly</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="music-input-row">
-                                <input type="text" id="music-search-input" class="music-input" placeholder="Enter song title, artist, or SoundCloud / Spotify link..." onkeydown="if(event.key === 'Enter') dashboardMusicPlayFromInput()" />
-                                <select id="music-voice-select" class="music-select">
-                                    <option value="">Auto Voice Channel</option>
-                                </select>
-                                <button class="btn btn-primary" onclick="dashboardMusicPlayFromInput()">
-                                    <i class="fa-solid fa-play"></i> Play Track
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- QUEUE LIST CARD -->
-                        <div class="music-queue-card">
-                            <div class="queue-card-header">
-                                <h3><i class="fa-solid fa-list-ol"></i> Up Next in Queue</h3>
-                                <span class="badge" id="music-queue-count">0 Songs</span>
-                            </div>
-                            <div class="queue-list" id="music-queue-items">
-                                <div class="queue-empty">
-                                    <i class="fa-solid fa-compact-disc fa-spin"></i>
-                                    <p>Queue is empty! Search a song above or use <code>/play &lt;song&gt;</code> in Discord to start playing.</p>
-                                </div>
-                            </div>
                         </div>
 
                     </div>

@@ -48,9 +48,8 @@ function createDiscordClient(privileged = false) {
     const modCmds = require('./src/commands/moderation.js');
     const ticketCmds = require('./src/commands/tickets.js');
     const engageCmds = require('./src/commands/engagement.js');
-    const musicCmds = require('./src/commands/music.js');
 
-    [...generalCmds, ...modCmds, ...ticketCmds, ...engageCmds, ...musicCmds].forEach(cmd => {
+    [...generalCmds, ...modCmds, ...ticketCmds, ...engageCmds].forEach(cmd => {
         client.commands.set(cmd.data.name, cmd);
     });
 
